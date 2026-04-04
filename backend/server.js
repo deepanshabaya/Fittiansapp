@@ -1,6 +1,7 @@
 const express = require('express');
 const cors = require('cors');
 const dotenv = require('dotenv');
+const path = require('path');
 
 dotenv.config();
 
@@ -19,13 +20,15 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
+// Serve uploaded files (images) as static assets
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+
 // Debug logging for login requests (helps diagnose tunnel timeouts).
 app.use((req, res, next) => {
   if (req.method === 'POST' && req.originalUrl === '/api/auth/login') {
     const start = Date.now();
     console.log('[LOGIN REQUEST] start', {
       email: req.body?.email,
-      role: req.body?.role,
     });
     res.on('finish', () => {
       console.log('[LOGIN REQUEST] done', {

@@ -8,7 +8,13 @@ const generateToken = (payload) => {
   return jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: '7d' });
 };
 
+// ────────────────────────────────────────────────────────────
 // POST /api/auth/login
+//
+// The client sends { email, password }.
+// Role is auto-detected from the users table — no role selection needed.
+// Admin-created users (no password set) can login by just providing email.
+// ────────────────────────────────────────────────────────────
 const login = async (req, res, next) => {
   try {
     const errors = validationResult(req);
@@ -16,9 +22,9 @@ const login = async (req, res, next) => {
       return res.status(400).json({ errors: errors.array() });
     }
 
-    const { email, password, role } = req.body;
+    const { email, password } = req.body;
 
-    console.log('[LOGIN] validating credentials', { email, role });
+    console.log('[LOGIN] validating credentials', { email });
     const user = await findUserByEmail(email);
     console.log('[LOGIN] user lookup done', {
       found: Boolean(user),
@@ -26,22 +32,26 @@ const login = async (req, res, next) => {
       userId: user?.id,
     });
 
-    if (!user || user.role !== role) {
-      return res.status(401).json({ message: 'Invalid credentials' });
+    if (!user) {
+      return res.status(401).json({ message: 'Invalid credentials — user not found' });
     }
 
-    // Temporary plain-text auth mode (not secure, for local debugging only).
-    const storedPassword = user.password;
-    console.log('[LOGIN] comparing plain password', {
-      hasPasswordField: Boolean(user.password),
-    });
-    const isMatch = storedPassword === password;
-    console.log('[LOGIN] password compare done', { isMatch });
-    if (!isMatch) {
-      return res.status(401).json({ message: 'Invalid credentials' });
+    // If user has a password set, verify it. If no password (admin-created), skip check.
+    if (user.password) {
+      const isMatch = user.password === password;
+      console.log('[LOGIN] password compare done', { isMatch });
+      if (!isMatch) {
+        return res.status(401).json({ message: 'Invalid credentials — wrong password' });
+      }
+    } else {
+      // Admin-created user with no password — first login.
+      // Optionally, the frontend could prompt them to set a password later.
+      console.log('[LOGIN] no password set (admin-created user) — granting access');
     }
 
-    // Role-specific checks
+    const role = user.role;
+
+    // Role-specific profile lookups
     let profile = null;
     let requiresApproval = false;
     let trainerId = null;
@@ -56,7 +66,6 @@ const login = async (req, res, next) => {
       if (profile) {
         trainerId = profile.id;
       }
-      // Current DB schema has no trainer approval columns.
       requiresApproval = false;
     } else if (role === 'customer') {
       console.log('[LOGIN] fetching customer profile');
@@ -76,11 +85,12 @@ const login = async (req, res, next) => {
         customerId = profile.id;
       }
     }
+    // role === 'admin' → no extra profile needed
 
     const tokenPayload = {
       id: user.id,
       email: user.email,
-      role: user.role,
+      role,
       trainerId,
       customerId,
     };
@@ -106,17 +116,17 @@ const checkUserExistsController = async (req, res, next) => {
       return res.status(400).json({ errors: errors.array() });
     }
 
-    const { email, role } = req.body;
+    const { email } = req.body;
 
     if (email) {
       const user = await findUserByEmail(email);
-      if (user && user.role === role) {
-        return res.json({ exists: true });
+      if (user) {
+        // Return existence + role so frontend can route correctly
+        return res.json({ exists: true, role: user.role });
       }
       return res.json({ exists: false });
     }
 
-    // No email provided — can't determine existence
     return res.json({ exists: false });
   } catch (err) {
     next(err);
