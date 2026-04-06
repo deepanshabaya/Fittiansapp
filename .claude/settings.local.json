@@ -1,0 +1,7 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(find /d/fittiansapp/backend/routes -type f -name *.js)"
+    ]
+  }
+}
