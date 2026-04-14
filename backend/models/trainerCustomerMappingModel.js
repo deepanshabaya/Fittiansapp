@@ -26,13 +26,15 @@ const getTrainerForCustomer = async (customerId) => {
 const getCustomersForTrainer = async (trainerId) => {
   const result = await query(
     `SELECT c.*,
-       COALESCE(cs.completed_count, 0) AS completed_sessions
+       COALESCE(cs.completed_count, 0) AS completed_sessions,
+       COALESCE(cs.missed_count, 0)    AS missed_sessions
      FROM trainer_customer_mapping m
      JOIN customers c ON c.id = m.customer_id
      LEFT JOIN (
-       SELECT customer_id, COUNT(*) AS completed_count
+       SELECT customer_id,
+              COUNT(*) FILTER (WHERE status = 'completed')                         AS completed_count,
+              COUNT(*) FILTER (WHERE status = 'missed' AND action_type = 'normal') AS missed_count
        FROM customer_sessions
-       WHERE status = 'completed'
        GROUP BY customer_id
      ) cs ON cs.customer_id = c.id
      WHERE m.trainer_id = $1`,

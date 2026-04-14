@@ -2,7 +2,8 @@
   "permissions": {
     "allow": [
       "Bash(find /d/fittiansapp/backend/routes -type f -name *.js)",
-      "Bash(node -e ':*)"
+      "Bash(node -e ':*)",
+      "Bash(node migrations/add_session_action_type.js)"
     ]
   }
 }

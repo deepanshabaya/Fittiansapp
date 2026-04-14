@@ -156,7 +156,14 @@ const register = async (req, res, next) => {
       });
     }
 
-    // Step 2: Check if email is already taken by a *different* user
+    // Step 2: Block re-registration if already registered
+    if (user.is_registered) {
+      return res.status(409).json({
+        message: 'Already registered. Please login.',
+      });
+    }
+
+    // Step 3: Check if email is already taken by a *different* user
     if (email) {
       const emailOwner = await findUserByEmail(email);
       if (emailOwner && emailOwner.id !== user.id) {

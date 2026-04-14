@@ -3,6 +3,8 @@ const { body } = require('express-validator');
 const { authenticate, authorizeRoles } = require('../middleware/authMiddleware');
 const {
   markSessionController,
+  postponeSessionController,
+  cancelSessionController,
   addProgressController,
   syncStepsController,
   getCustomerDashboardController,
@@ -23,6 +25,24 @@ router.post(
     body('session_date').optional().isDate(),
   ],
   markSessionController
+);
+
+// Customer postpones a session (status=missed, action_type=postponed)
+router.post(
+  '/session/postpone',
+  authenticate,
+  authorizeRoles('customer'),
+  [body('session_date').optional().isDate()],
+  postponeSessionController
+);
+
+// Customer cancels a session (status=missed, action_type=cancelled)
+router.post(
+  '/session/cancel',
+  authenticate,
+  authorizeRoles('customer'),
+  [body('session_date').optional().isDate()],
+  cancelSessionController
 );
 
 // Trainer adds/updates customer progress

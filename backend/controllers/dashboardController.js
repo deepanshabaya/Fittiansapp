@@ -22,15 +22,154 @@ const markSessionController = async (req, res, next) => {
     if (map.rowCount === 0) return res.status(403).json({ message: 'Customer not assigned to you.' });
 
     const result = await pool.query(
-      `INSERT INTO customer_sessions (customer_id, trainer_id, session_date, status)
-       VALUES ($1, $2, $3, $4)
+      `INSERT INTO customer_sessions (customer_id, trainer_id, session_date, status, action_type)
+       VALUES ($1, $2, $3, $4, 'normal')
        ON CONFLICT (customer_id, session_date)
-       DO UPDATE SET status = $4
+       DO UPDATE SET status = EXCLUDED.status, action_type = 'normal'
        RETURNING *`,
       [customer_id, trainerId, date, status]
     );
 
-    return res.json({ session: result.rows[0] });
+    const counts = await getSessionCounts(customer_id);
+
+    return res.json({
+      session: result.rows[0],
+      status: result.rows[0].status,
+      customer_id,
+      ...counts,
+    });
+  } catch (err) {
+    next(err);
+  }
+};
+
+// ─── Shared helper: session counts (authoritative, always from DB) ─
+async function getSessionCounts(customerId) {
+  const r = await pool.query(
+    `SELECT
+       COUNT(*) FILTER (WHERE status = 'completed')                         AS completed,
+       COUNT(*) FILTER (WHERE status = 'missed' AND action_type = 'normal') AS missed,
+       COUNT(*) FILTER (WHERE action_type = 'postponed')                    AS postponed,
+       COUNT(*) FILTER (WHERE action_type = 'cancelled')                    AS cancelled
+     FROM customer_sessions
+     WHERE customer_id = $1`,
+    [customerId]
+  );
+  const row = r.rows[0] || {};
+  return {
+    sessions_completed: parseInt(row.completed, 10) || 0,
+    sessions_missed:    parseInt(row.missed, 10) || 0,
+    sessions_postponed: parseInt(row.postponed, 10) || 0,
+    sessions_cancelled: parseInt(row.cancelled, 10) || 0,
+  };
+}
+
+// ─── Shared helper: validate 8 PM-previous-day cutoff for customer actions ─
+function canModifySession(sessionDateStr) {
+  // sessionDateStr is 'YYYY-MM-DD'. Cutoff = 20:00 local time on (session_date - 1 day).
+  const [y, m, d] = sessionDateStr.split('-').map(Number);
+  const cutoff = new Date(y, m - 1, d - 1, 20, 0, 0, 0);
+  return Date.now() < cutoff.getTime();
+}
+
+// ─── Shared helper: find customer's trainer via mapping ─
+async function findTrainerIdForCustomer(customerId) {
+  const r = await pool.query(
+    `SELECT trainer_id FROM trainer_customer_mapping WHERE customer_id = $1`,
+    [customerId]
+  );
+  return r.rows[0]?.trainer_id || null;
+}
+
+// ─── POST /api/dashboard/session/postpone (customer) ─────
+const postponeSessionController = async (req, res, next) => {
+  try {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) return res.status(400).json({ errors: errors.array() });
+
+    const customerId = req.user.customerId;
+    if (!customerId) return res.status(403).json({ message: 'Only customers can postpone sessions.' });
+
+    const { session_date } = req.body;
+    const date = session_date || (() => {
+      const t = new Date();
+      t.setDate(t.getDate() + 1);
+      return t.toISOString().slice(0, 10);
+    })();
+
+    if (!canModifySession(date)) {
+      return res.status(400).json({ message: 'Session can only be modified before 8 PM of previous day' });
+    }
+
+    // Check postpone limit
+    const limitRes = await pool.query(
+      `SELECT postpone_limit FROM customers WHERE id = $1`, [customerId]
+    );
+    const postponeLimit = limitRes.rows[0]?.postpone_limit ?? 2;
+
+    const usedRes = await pool.query(
+      `SELECT COUNT(*) AS used FROM customer_sessions
+       WHERE customer_id = $1 AND action_type = 'postponed'`,
+      [customerId]
+    );
+    const postponedCount = parseInt(usedRes.rows[0].used, 10) || 0;
+    if (postponedCount >= postponeLimit) {
+      return res.status(400).json({ message: 'You have reached your postpone limit' });
+    }
+
+    const trainerId = await findTrainerIdForCustomer(customerId);
+    if (!trainerId) return res.status(400).json({ message: 'No trainer assigned to you.' });
+
+    const result = await pool.query(
+      `INSERT INTO customer_sessions (customer_id, trainer_id, session_date, status, action_type)
+       VALUES ($1, $2, $3, 'missed', 'postponed')
+       ON CONFLICT (customer_id, session_date)
+       DO UPDATE SET status = 'missed', action_type = 'postponed'
+       RETURNING *`,
+      [customerId, trainerId, date]
+    );
+
+    const counts = await getSessionCounts(customerId);
+    return res.json({ session: result.rows[0], status: 'missed', customer_id: customerId, ...counts });
+  } catch (err) {
+    next(err);
+  }
+};
+
+// ─── POST /api/dashboard/session/cancel (customer) ───────
+const cancelSessionController = async (req, res, next) => {
+  try {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) return res.status(400).json({ errors: errors.array() });
+
+    const customerId = req.user.customerId;
+    if (!customerId) return res.status(403).json({ message: 'Only customers can cancel sessions.' });
+
+    const { session_date } = req.body;
+    const date = session_date || (() => {
+      const t = new Date();
+      t.setDate(t.getDate() + 1);
+      return t.toISOString().slice(0, 10);
+    })();
+
+    if (!canModifySession(date)) {
+      return res.status(400).json({ message: 'Session can only be modified before 8 PM of previous day' });
+    }
+
+    const trainerId = await findTrainerIdForCustomer(customerId);
+    if (!trainerId) return res.status(400).json({ message: 'No trainer assigned to you.' });
+
+    const result = await pool.query(
+      `INSERT INTO customer_sessions (customer_id, trainer_id, session_date, status, action_type)
+       VALUES ($1, $2, $3, 'missed', 'cancelled')
+       ON CONFLICT (customer_id, session_date)
+       DO UPDATE SET status = 'missed', action_type = 'cancelled'
+       RETURNING *`,
+      [customerId, trainerId, date]
+    );
+
+    const counts = await getSessionCounts(customerId);
+    return res.json({ session: result.rows[0], status: 'missed', customer_id: customerId, ...counts });
   } catch (err) {
     next(err);
   }
@@ -256,7 +395,8 @@ const getCustomerDashboardController = async (req, res, next) => {
       `SELECT id, name, mobile, address, upload_photo, weight, height,
               fitness_goal, daily_routine, medical_conditions, smoking,
               alcohol_frequency, dietary_preference, special_focus,
-              program_enrolled, amount_paid, total_sessions, start_date, age
+              program_enrolled, amount_paid, total_sessions, start_date, age,
+              postpone_limit
        FROM customers WHERE id = $1`,
       [id]
     );
@@ -270,15 +410,12 @@ const getCustomerDashboardController = async (req, res, next) => {
     );
     const latest_progress = latestProgRes.rows[0] || null;
 
-    // 8. Total completed sessions (all time, for payment/renewal logic)
-    const totalCompletedRes = await pool.query(
-      `SELECT COUNT(*) AS cnt FROM customer_sessions
-       WHERE customer_id = $1 AND status = 'completed'`,
-      [id]
-    );
-    const sessions_completed = parseInt(totalCompletedRes.rows[0].cnt) || 0;
+    // 8. All-time session counts (authoritative, by action_type)
+    const allCounts = await getSessionCounts(id);
+    const sessions_completed = allCounts.sessions_completed;
     const total_sessions = customer_details?.total_sessions || 0;
     const sessions_remaining = Math.max(total_sessions - sessions_completed, 0);
+    const postpone_limit = customer_details?.postpone_limit ?? 2;
 
     return res.json({
       streak,
@@ -294,8 +431,12 @@ const getCustomerDashboardController = async (req, res, next) => {
       customer_details,
       latest_progress,
       sessions_completed,
+      sessions_missed: allCounts.sessions_missed,
+      sessions_postponed: allCounts.sessions_postponed,
+      sessions_cancelled: allCounts.sessions_cancelled,
       sessions_remaining,
       total_sessions,
+      postpone_limit,
       amount_paid: customer_details?.amount_paid || null,
       start_date: customer_details?.start_date || null,
     });
@@ -341,6 +482,8 @@ const getTodaySessionsController = async (req, res, next) => {
 
 module.exports = {
   markSessionController,
+  postponeSessionController,
+  cancelSessionController,
   addProgressController,
   syncStepsController,
   getCustomerDashboardController,
