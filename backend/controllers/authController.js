@@ -1,7 +1,8 @@
 const jwt = require('jsonwebtoken');
 const { validationResult } = require('express-validator');
-const { createUser, findUserByEmail } = require('../models/userModel');
-const { createTrainer, getTrainerByUserId } = require('../models/trainerModel');
+const { findUserByEmail, findUserByMobile } = require('../models/userModel');
+const { query } = require('../config/db');
+const { getTrainerByUserId } = require('../models/trainerModel');
 const { createCustomer, getCustomerByUserId } = require('../models/customerModel');
 
 const generateToken = (payload) => {
@@ -134,6 +135,10 @@ const checkUserExistsController = async (req, res, next) => {
 };
 
 // POST /api/auth/register
+// Mobile-based registration:
+//   1. Find user by mobile in public.users
+//   2. If found → UPDATE email, password, modifiedon, is_registered
+//   3. If not found → reject (admin must create the user first)
 const register = async (req, res, next) => {
   try {
     const errors = validationResult(req);
@@ -141,64 +146,68 @@ const register = async (req, res, next) => {
       return res.status(400).json({ errors: errors.array() });
     }
 
-    const {
-      email,
-      password,
-      role,
-      name,
-      profilePhotoUrl,
-      experienceYears,
-      specialization,
-      certifications,
-      certificationAcademy,
-      introductionVideoUrl,
-    } = req.body;
+    const { mobile, email, password } = req.body;
 
-    const existing = await findUserByEmail(email);
-    if (existing) {
-      return res.status(400).json({ message: 'Email already registered' });
+    // Step 1: Lookup user by mobile
+    const user = await findUserByMobile(mobile);
+    if (!user) {
+      return res.status(404).json({
+        message: 'Mobile not registered. Please contact admin to create your account.',
+      });
     }
 
-    // Temporary plain-text auth mode (not secure, for local debugging only).
-    const user = await createUser({ email, password, role });
+    // Step 2: Check if email is already taken by a *different* user
+    if (email) {
+      const emailOwner = await findUserByEmail(email);
+      if (emailOwner && emailOwner.id !== user.id) {
+        return res.status(409).json({ message: 'This email is already used by another account.' });
+      }
+    }
 
+    // Step 3: Update email, password, modifiedon, is_registered
+    const updated = await query(
+      `UPDATE users
+       SET email = $1, password = $2, modifiedon = NOW(), is_registered = true
+       WHERE id = $3
+       RETURNING id, name, email, role, mobile`,
+      [email.trim(), password, user.id]
+    );
+    const updatedUser = updated.rows[0];
+
+    // Step 4: Fetch role-specific profile
     let profile = null;
     let trainerId = null;
     let customerId = null;
 
-    if (role === 'trainer') {
-      profile = await createTrainer({
-        userId: user.id,
-        experienceYears: experienceYears || 0,
-        specialization: specialization || null,
-        bio: null,
-        certifications: JSON.stringify(certifications || []),
-        certificationAcademy: certificationAcademy || null,
-        introductionVideoUrl: introductionVideoUrl || null,
-      });
-      trainerId = profile.id;
-    } else if (role === 'customer') {
-      profile = await createCustomer({
-        userId: user.id,
-        startDate: null,
-      });
-      customerId = profile.id;
+    if (updatedUser.role === 'trainer') {
+      profile = await getTrainerByUserId(updatedUser.id);
+      trainerId = profile?.id || null;
+    } else if (updatedUser.role === 'customer') {
+      profile = await getCustomerByUserId(updatedUser.id);
+      if (!profile) {
+        profile = await createCustomer({ userId: updatedUser.id, startDate: null });
+      }
+      customerId = profile?.id || null;
     }
 
+    const requiresApproval = updatedUser.role === 'trainer' && profile && !profile.is_approved;
+
     const tokenPayload = {
-      id: user.id,
-      email: user.email,
-      role: user.role,
+      id: updatedUser.id,
+      email: updatedUser.email,
+      role: updatedUser.role,
       trainerId,
       customerId,
     };
 
     const token = generateToken(tokenPayload);
 
-    return res.status(201).json({
+    return res.status(200).json({
+      message: 'Registration successful',
       token,
       user: tokenPayload,
       profile,
+      requiresApproval,
     });
   } catch (err) {
     next(err);

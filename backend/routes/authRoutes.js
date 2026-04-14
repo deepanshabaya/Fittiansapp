@@ -18,9 +18,11 @@ router.post(
 router.post(
   '/register',
   [
+    body('mobile')
+      .matches(/^\d{10,15}$/)
+      .withMessage('Mobile must be 10–15 digits'),
     body('email').isEmail().withMessage('Valid email is required'),
-    body('role').isIn(['trainer', 'customer']).withMessage('Role is invalid'),
-    body('name').isLength({ min: 2 }).withMessage('Name is required'),
+    body('password').notEmpty().withMessage('Password is required'),
   ],
   register
 );

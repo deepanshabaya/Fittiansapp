@@ -93,13 +93,15 @@ const createUserController = async (req, res, next) => {
     }
 
     const { name, role } = req.body;
+    // mobile field comes as 'mobile' for customers, 'mobileno' for trainers
+    const mobileForUsers = req.body.mobile || req.body.mobileno || null;
 
     await client.query('BEGIN');
 
     // Step 1: Insert into users table (email & password are null — user sets them on first app open)
     const userResult = await client.query(
-      `INSERT INTO users (name, role) VALUES ($1, $2) RETURNING id, name, role, created_at`,
-      [name, role]
+      `INSERT INTO users (name, role, mobile, modifiedon) VALUES ($1, $2, $3, NOW()) RETURNING id, name, role, mobile, modifiedon, created_at`,
+      [name, role, mobileForUsers]
     );
     const newUser = userResult.rows[0];
 

@@ -14,6 +14,7 @@ const sessionRoutes = require('./routes/sessionRoutes');
 const attendanceRoutes = require('./routes/attendanceRoutes');
 const pauseRoutes = require('./routes/pauseRoutes');
 const customerProgramRoutes = require('./routes/customerProgramRoutes');
+const dashboardRoutes = require('./routes/dashboardRoutes');
 
 const app = express();
 
@@ -52,6 +53,7 @@ app.use('/api/sessions', sessionRoutes);
 app.use('/api/attendance', attendanceRoutes);
 app.use('/api/pause', pauseRoutes);
 app.use('/api/customer-programs', customerProgramRoutes);
+app.use('/api/dashboard', dashboardRoutes);
 
 app.use(errorHandler);
 
