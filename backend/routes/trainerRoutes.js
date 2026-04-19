@@ -1,6 +1,7 @@
 const express = require('express');
 const { body } = require('express-validator');
 const { authenticate, authorizeRoles } = require('../middleware/authMiddleware');
+const { adminUpload } = require('../config/upload');
 const {
   getMyProfileController,
   getTrainerForCustomerController,
@@ -22,11 +23,17 @@ router.get(
   getMyProfileController
 );
 
-// Trainer updates their own profile
+// Trainer updates their own profile (multipart so `profile` image can be uploaded)
 router.put(
   '/me',
   authenticate,
   authorizeRoles('trainer'),
+  (req, res, next) => {
+    adminUpload(req, res, (err) => {
+      if (err) return res.status(400).json({ message: err.message });
+      next();
+    });
+  },
   updateMyProfileController
 );
 
@@ -38,11 +45,17 @@ router.get(
   getMyCustomersController
 );
 
-// Trainer updates health fields of a customer
+// Trainer updates health fields of a customer (multipart so `upload_photo` can be uploaded)
 router.put(
   '/customers/:id/health',
   authenticate,
   authorizeRoles('trainer'),
+  (req, res, next) => {
+    adminUpload(req, res, (err) => {
+      if (err) return res.status(400).json({ message: err.message });
+      next();
+    });
+  },
   [
     body('weight').optional({ nullable: true, checkFalsy: true }).isFloat({ min: 0 }),
     body('height').optional({ nullable: true, checkFalsy: true }).isFloat({ min: 0 }),

@@ -105,6 +105,35 @@ CREATE TABLE IF NOT EXISTS pause_requests (
   created_at      TIMESTAMP DEFAULT NOW()
 );
 
+-- 10. Legal documents (versioned terms, privacy, etc.)
+CREATE TABLE IF NOT EXISTS legal_documents (
+  id         SERIAL PRIMARY KEY,
+  type       VARCHAR(32) NOT NULL,
+  version    INTEGER NOT NULL CHECK (version >= 1),
+  content    TEXT NOT NULL,
+  created_at TIMESTAMP NOT NULL DEFAULT NOW(),
+  updated_at TIMESTAMP NOT NULL DEFAULT NOW(),
+  UNIQUE (type, version)
+);
+CREATE INDEX IF NOT EXISTS legal_documents_type_version_idx
+  ON legal_documents (type, version DESC);
+
+-- 11. User agreements (per-user acceptance of a versioned legal document)
+CREATE TABLE IF NOT EXISTS user_agreements (
+  id         SERIAL PRIMARY KEY,
+  user_id    INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  type       VARCHAR(32) NOT NULL,
+  version    INTEGER NOT NULL CHECK (version >= 1),
+  agreed     BOOLEAN NOT NULL DEFAULT TRUE,
+  agreed_at  TIMESTAMP NOT NULL DEFAULT NOW(),
+  UNIQUE (user_id, type, version),
+  FOREIGN KEY (type, version)
+    REFERENCES legal_documents (type, version)
+    ON DELETE RESTRICT
+);
+CREATE INDEX IF NOT EXISTS user_agreements_user_type_idx
+  ON user_agreements (user_id, type);
+
 -- =============================================================
 -- Seed: create one admin user (password: admin123)
 -- The hash below is bcrypt('admin123', 10)

@@ -28,6 +28,35 @@ function tomorrowISO() {
   return d.toISOString().slice(0, 10);
 }
 
+// Midnight today in local time — used as the strict lower bound for action dates.
+function todayStartLocal() {
+  const d = new Date();
+  d.setHours(0, 0, 0, 0);
+  return d;
+}
+
+// Validate a YYYY-MM-DD string. Returns null if the date is strictly after today,
+// otherwise an error message. Catches malformed input and past/today dates.
+function validateFutureDate(value) {
+  if (!value || !/^\d{4}-\d{2}-\d{2}$/.test(value.trim())) {
+    return 'Please enter a valid date in YYYY-MM-DD format.';
+  }
+  const [y, m, d] = value.trim().split('-').map(Number);
+  const picked = new Date(y, m - 1, d);
+  if (
+    Number.isNaN(picked.getTime()) ||
+    picked.getFullYear() !== y ||
+    picked.getMonth() !== m - 1 ||
+    picked.getDate() !== d
+  ) {
+    return 'Please enter a valid calendar date.';
+  }
+  if (picked <= todayStartLocal()) {
+    return 'Date must be after today.';
+  }
+  return null;
+}
+
 export default function SessionManagementScreen() {
   const { token, customerId } = useAuth();
   const insets = useSafeAreaInsets();
@@ -76,8 +105,9 @@ export default function SessionManagementScreen() {
       Alert.alert('Limit reached', 'You have reached your postpone limit');
       return;
     }
-    if (!postponeDate) {
-      Alert.alert('Missing date', 'Please enter the session date.');
+    const dateErr = validateFutureDate(postponeDate);
+    if (dateErr) {
+      Alert.alert('Invalid date', dateErr);
       return;
     }
     setSubmittingPostpone(true);
@@ -94,8 +124,9 @@ export default function SessionManagementScreen() {
 
   const handleCancel = async () => {
     if (!ensureAuth()) return;
-    if (!cancelDate) {
-      Alert.alert('Missing date', 'Please enter the session date.');
+    const dateErr = validateFutureDate(cancelDate);
+    if (dateErr) {
+      Alert.alert('Invalid date', dateErr);
       return;
     }
     setSubmittingCancel(true);
@@ -112,8 +143,13 @@ export default function SessionManagementScreen() {
 
   const handlePause = async () => {
     if (!ensureAuth()) return;
-    if (!pauseUntilDate || !reason) {
-      Alert.alert('Missing fields', 'Please enter pause until date and reason.');
+    if (!reason.trim()) {
+      Alert.alert('Missing fields', 'Please enter a reason.');
+      return;
+    }
+    const dateErr = validateFutureDate(pauseUntilDate);
+    if (dateErr) {
+      Alert.alert('Invalid date', dateErr);
       return;
     }
     setSubmittingPause(true);

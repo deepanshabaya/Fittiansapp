@@ -3,6 +3,24 @@
 const BASE_URL = (process.env.EXPO_PUBLIC_API_BASE_URL || 'http://localhost:3000').replace(/\/$/, '');
 const REQUEST_TIMEOUT_MS = 10000;
 
+// Resolve a server-side upload path (e.g. "/uploads/profiles/123.jpg") into
+// a full URL the <Image> component can load. Returns null for empty values and
+// passes through any value that's already an absolute http(s) URL.
+export function avatarUri(path) {
+  if (!path) return null;
+  if (/^https?:\/\//i.test(path)) return path;
+  return `${BASE_URL}${path.startsWith('/') ? path : `/${path}`}`;
+}
+
+// Build a React-Native FormData file entry from a local image URI.
+function buildImageFilePart(imageUri) {
+  if (!imageUri) return null;
+  const filename = imageUri.split('/').pop() || 'photo.jpg';
+  const ext = (filename.split('.').pop() || 'jpg').toLowerCase();
+  const mimeType = ext === 'png' ? 'image/png' : 'image/jpeg';
+  return { uri: imageUri, name: filename, type: mimeType };
+}
+
 async function fetchWithTimeout(url, options = {}, timeoutMs = REQUEST_TIMEOUT_MS) {
   const controller = new AbortController();
   const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
@@ -241,27 +259,53 @@ export async function fetchMyCustomers({ token }) {
   return handleResponse(res);
 }
 
-export async function updateCustomerHealth({ token, customerId, fields }) {
-  const res = await fetchWithTimeout(`${BASE_URL}/api/trainers/customers/${customerId}/health`, {
-    method: 'PUT',
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${token}`,
-    },
-    body: JSON.stringify(fields),
+// Trainer updates a mapped customer's health. Sends multipart so a new photo
+// can be attached as upload_photo (file). Omit imageUri to keep current photo.
+export async function updateCustomerHealth({ token, customerId, fields, imageUri }) {
+  const body = new FormData();
+  Object.entries(fields || {}).forEach(([key, value]) => {
+    // Don't send upload_photo as text — photo only travels as a file now.
+    if (key === 'upload_photo') return;
+    if (value !== null && value !== undefined && value !== '') {
+      body.append(key, String(value));
+    }
   });
+  const filePart = buildImageFilePart(imageUri);
+  if (filePart) body.append('upload_photo', filePart);
+
+  const res = await fetchWithTimeout(
+    `${BASE_URL}/api/trainers/customers/${customerId}/health`,
+    {
+      method: 'PUT',
+      headers: { Authorization: `Bearer ${token}` },
+      body,
+    },
+    15000
+  );
   return handleResponse(res);
 }
 
-export async function updateMyTrainerProfile({ token, fields }) {
-  const res = await fetchWithTimeout(`${BASE_URL}/api/trainers/me`, {
-    method: 'PUT',
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${token}`,
-    },
-    body: JSON.stringify(fields),
+// Trainer updates their own profile. Multipart so `profile` photo can be uploaded.
+export async function updateMyTrainerProfile({ token, fields, imageUri }) {
+  const body = new FormData();
+  Object.entries(fields || {}).forEach(([key, value]) => {
+    if (key === 'profile') return; // photo travels as file only
+    if (value !== null && value !== undefined && value !== '') {
+      body.append(key, String(value));
+    }
   });
+  const filePart = buildImageFilePart(imageUri);
+  if (filePart) body.append('profile', filePart);
+
+  const res = await fetchWithTimeout(
+    `${BASE_URL}/api/trainers/me`,
+    {
+      method: 'PUT',
+      headers: { Authorization: `Bearer ${token}` },
+      body,
+    },
+    15000
+  );
   return handleResponse(res);
 }
 
@@ -398,6 +442,63 @@ export async function fetchMyTrainerProfile({ token }) {
 export async function fetchCustomerProgramSummary({ customerId, token }) {
   const res = await fetchWithTimeout(`${BASE_URL}/api/customer-programs/${customerId}/summary`, {
     headers: { Authorization: `Bearer ${token}` },
+  });
+  return handleResponse(res);
+}
+
+// ────────────────────────────────────────────────────────
+// Customer self profile
+// ────────────────────────────────────────────────────────
+
+export async function fetchMyCustomerProfile({ token }) {
+  const res = await fetchWithTimeout(`${BASE_URL}/api/customers/me`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  return handleResponse(res);
+}
+
+// Customer updates their own profile. Multipart so a new photo can be uploaded.
+// Omit imageUri to keep the current photo unchanged.
+export async function updateMyCustomerProfile({ token, mobile, address, imageUri }) {
+  const body = new FormData();
+  if (mobile !== undefined && mobile !== null) body.append('mobile', String(mobile));
+  if (address !== undefined && address !== null) body.append('address', String(address));
+  const filePart = buildImageFilePart(imageUri);
+  if (filePart) body.append('upload_photo', filePart);
+
+  const res = await fetchWithTimeout(
+    `${BASE_URL}/api/customers/update-profile`,
+    {
+      method: 'PUT',
+      headers: { Authorization: `Bearer ${token}` },
+      body,
+    },
+    15000
+  );
+  return handleResponse(res);
+}
+
+// ────────────────────────────────────────────────────────
+// Legal / user agreements
+// ────────────────────────────────────────────────────────
+
+// Public — returns the latest terms document { id, type, version, content, ... }.
+export async function fetchLatestTerms() {
+  const res = await fetchWithTimeout(`${BASE_URL}/api/legal/terms`);
+  const data = await handleResponse(res);
+  return data.terms;
+}
+
+// Authenticated — records that the logged-in user accepted (type, version).
+// Idempotent on the backend, so safe to retry.
+export async function recordUserAgreement({ token, type = 'terms', version }) {
+  const res = await fetchWithTimeout(`${BASE_URL}/api/user-agreements`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify({ type, version, agreed: true }),
   });
   return handleResponse(res);
 }

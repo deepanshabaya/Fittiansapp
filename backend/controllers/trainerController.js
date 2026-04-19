@@ -33,7 +33,10 @@ const updateCustomerHealthController = async (req, res, next) => {
 
     // Normalise: treat empty strings as null (pickers send "" when unset)
     const clean = (v) => (v === '' || v === undefined ? null : v);
-    const upload_photo = clean(req.body.upload_photo);
+    // Photo: new uploaded file wins; otherwise keep existing value (set later from DB row)
+    const uploadedPhotoPath = req.files?.upload_photo?.[0]
+      ? `/uploads/profiles/${req.files.upload_photo[0].filename}`
+      : null;
     const weight = clean(req.body.weight);
     const height = clean(req.body.height);
     const daily_routine = clean(req.body.daily_routine);
@@ -53,6 +56,7 @@ const updateCustomerHealthController = async (req, res, next) => {
       await client.query('ROLLBACK');
       return res.status(404).json({ message: 'Customer not found' });
     }
+    const upload_photo = uploadedPhotoPath || curRes.rows[0].upload_photo;
 
     // 2. Resolve modifiedby (trainer.name, fallback to mobile)
     const trainerProfile = await getTrainerById(trainerId);
@@ -137,31 +141,55 @@ const updateMyProfileController = async (req, res, next) => {
       return res.status(404).json({ message: 'Trainer profile not found' });
     }
 
-    const {
-      bio = null,
-      specialization = null,
-      certifications = null,
-      introduction_video_url = null,
-      name = null,
-      profile = null,
-      mobileno = null,
-    } = req.body;
+    const clean = (v) => {
+      if (v === undefined || v === null) return null;
+      const t = String(v).trim();
+      return t.length ? t : null;
+    };
 
-    const result = await pool.query(
-      `UPDATE trainers SET
-         bio                    = $1,
-         specialization         = $2,
-         certifications         = $3,
-         introduction_video_url = $4,
-         name                   = $5,
-         profile                = $6,
-         mobileno               = $7
-       WHERE id = $8
-       RETURNING *`,
-      [bio, specialization, certifications, introduction_video_url, name, profile, mobileno, trainerProfile.id]
-    );
+    const bio = clean(req.body.bio);
+    const specialization = clean(req.body.specialization);
+    const certifications = clean(req.body.certifications);
+    const introduction_video_url = clean(req.body.introduction_video_url);
+    const name = clean(req.body.name);
+    const mobileno = clean(req.body.mobileno);
+    // Photo: new uploaded file wins; otherwise keep the existing trainers.profile
+    const profile = req.files?.profile?.[0]
+      ? `/uploads/profiles/${req.files.profile[0].filename}`
+      : trainerProfile.profile;
 
-    return res.json({ trainer: result.rows[0] });
+    const client = await pool.connect();
+    try {
+      await client.query('BEGIN');
+
+      const result = await client.query(
+        `UPDATE trainers SET
+           bio                    = $1,
+           specialization         = $2,
+           certifications         = $3,
+           introduction_video_url = $4,
+           name                   = $5,
+           profile                = $6,
+           mobileno               = $7
+         WHERE id = $8
+         RETURNING *`,
+        [bio, specialization, certifications, introduction_video_url, name, profile, mobileno, trainerProfile.id]
+      );
+
+      // Keep users.mobile in sync with trainers.mobileno
+      await client.query(
+        `UPDATE users SET mobile = $1 WHERE id = $2`,
+        [mobileno, req.user.id]
+      );
+
+      await client.query('COMMIT');
+      return res.json({ trainer: result.rows[0] });
+    } catch (err) {
+      await client.query('ROLLBACK').catch(() => {});
+      throw err;
+    } finally {
+      client.release();
+    }
   } catch (err) {
     next(err);
   }

@@ -26,9 +26,31 @@ const getCustomerById = async (id) => {
   return result.rows[0];
 };
 
+const updateCustomerProfileByUserId = async ({
+  userId,
+  mobile,
+  address,
+  uploadPhoto,
+  modifiedBy,
+}) => {
+  const result = await query(
+    `UPDATE customers SET
+       mobile       = $2,
+       address      = $3,
+       upload_photo = $4,
+       modifiedon   = NOW(),
+       modifiedby   = $5
+     WHERE user_id = $1
+     RETURNING *`,
+    [userId, mobile, address, uploadPhoto, modifiedBy]
+  );
+  return result.rows[0];
+};
+
 module.exports = {
   createCustomer,
   getCustomerByUserId,
   getCustomerById,
+  updateCustomerProfileByUserId,
 };
 

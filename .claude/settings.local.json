@@ -5,7 +5,8 @@
       "Bash(node -e ':*)",
       "Bash(node migrations/add_session_action_type.js)",
       "Bash(adb devices *)",
-      "Bash(\"C:/Program Files/Java/jdk-17/bin/java.exe\" -version)"
+      "Bash(\"C:/Program Files/Java/jdk-17/bin/java.exe\" -version)",
+      "Bash(node -e \"const { pool } = require\\('./config/db'\\); Promise.all\\([pool.query\\(\\\\\"SELECT column_name FROM information_schema.columns WHERE table_name='users'\\\\\"\\), pool.query\\(\\\\\"SELECT column_name FROM information_schema.columns WHERE table_name='trainers'\\\\\"\\)]\\).then\\(\\([u,t]\\) => { console.log\\('USERS:', u.rows.map\\(r=>r.column_name\\)\\); console.log\\('TRAINERS:', t.rows.map\\(r=>r.column_name\\)\\); pool.end\\(\\); }\\).catch\\(e => { console.error\\(e.message\\); pool.end\\(\\); }\\);\")"
     ]
   }
 }

@@ -17,6 +17,7 @@ import {
 } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useAuth } from '../navigation/AppNavigator';
+import * as ImagePicker from 'expo-image-picker';
 import {
   fetchTrainerForCustomer,
   fetchMyCustomers,
@@ -27,6 +28,7 @@ import {
   fetchLatestProgress,
   syncSteps,
   fetchTodaySessions,
+  avatarUri,
 } from '../services/api';
 import { Ionicons } from '@expo/vector-icons';
 import TrainerCard from '../components/TrainerCard';
@@ -43,7 +45,6 @@ const DIET_OPTS = ['vegetarian', 'vegan', 'non_vegetarian', 'eggetarian', 'jain'
 const PROGRAM_OPTS = ['my_home_coach', 'my_home_coach_couple', 'fit_mentor_program', 'disease_reversal_program'];
 
 const HEALTH_FIELDS = [
-  { key: 'upload_photo', label: 'Photo URL', type: 'text' },
   { key: 'weight', label: 'Weight (kg)', type: 'number' },
   { key: 'height', label: 'Height (cm)', type: 'number' },
   { key: 'daily_routine', label: 'Daily Routine', type: 'picker', options: DAILY_ROUTINE_OPTS },
@@ -151,6 +152,7 @@ export default function DashboardScreen() {
   const [form, setForm] = useState({});
   const [saving, setSaving] = useState(false);
   const [pickerFor, setPickerFor] = useState(null);
+  const [customerPhotoUri, setCustomerPhotoUri] = useState(null);
   // Action picker modal — shown on customer card tap
   const [actionCustomer, setActionCustomer] = useState(null);
   // Progress modal
@@ -285,8 +287,8 @@ export default function DashboardScreen() {
   const openViewer = (c) => {
     setViewing(c);
     setIsEditing(false);
+    setCustomerPhotoUri(null);
     setForm({
-      upload_photo: c.upload_photo || '',
       weight: c.weight?.toString() || '',
       height: c.height?.toString() || '',
       daily_routine: c.daily_routine || '',
@@ -300,12 +302,38 @@ export default function DashboardScreen() {
     });
   };
 
-  const closeModal = () => { setViewing(null); setIsEditing(false); };
+  const closeModal = () => {
+    setViewing(null);
+    setIsEditing(false);
+    setCustomerPhotoUri(null);
+  };
+
+  const pickCustomerPhoto = async () => {
+    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (status !== 'granted') {
+      Alert.alert('Permission needed', 'Please allow gallery access to upload a photo.');
+      return;
+    }
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ['images'],
+      allowsEditing: true,
+      aspect: [1, 1],
+      quality: 0.8,
+    });
+    if (!result.canceled && result.assets?.[0]?.uri) {
+      setCustomerPhotoUri(result.assets[0].uri);
+    }
+  };
 
   const saveHealth = async () => {
     try {
       setSaving(true);
-      const data = await updateCustomerHealth({ token, customerId: viewing.id, fields: { ...form } });
+      const data = await updateCustomerHealth({
+        token,
+        customerId: viewing.id,
+        fields: { ...form },
+        imageUri: customerPhotoUri,
+      });
       setCustomers(prev => prev.map(c => (c.id === viewing.id ? data.customer : c)));
       closeModal();
       Alert.alert('Saved', 'Health details updated.');
@@ -395,12 +423,6 @@ export default function DashboardScreen() {
     const c = actionCustomer;
     setActionCustomer(null);
     if (c) openProgressForm(c);
-  };
-
-  const handleMarkFromAction = (status) => {
-    const c = actionCustomer;
-    setActionCustomer(null);
-    if (c) handleMarkSession(c.id, status);
   };
 
   const renderCustomerCard = (c) => {
@@ -694,20 +716,6 @@ export default function DashboardScreen() {
               <Text style={styles.actionBtnText}>Update Progress</Text>
               <Ionicons name="chevron-forward" size={16} color="#6b6360" />
             </TouchableOpacity>
-            <TouchableOpacity style={styles.actionBtn} onPress={() => handleMarkFromAction('completed')} activeOpacity={0.7}>
-              <View style={styles.actionBtnIconWrap}>
-                <Ionicons name="checkmark-circle-outline" size={18} color="#22c55e" />
-              </View>
-              <Text style={styles.actionBtnText}>Mark Completed</Text>
-              <Ionicons name="chevron-forward" size={16} color="#6b6360" />
-            </TouchableOpacity>
-            <TouchableOpacity style={styles.actionBtn} onPress={() => handleMarkFromAction('missed')} activeOpacity={0.7}>
-              <View style={styles.actionBtnIconWrap}>
-                <Ionicons name="close-circle-outline" size={18} color="#ef4444" />
-              </View>
-              <Text style={styles.actionBtnText}>Mark Missed</Text>
-              <Ionicons name="chevron-forward" size={16} color="#6b6360" />
-            </TouchableOpacity>
             <TouchableOpacity style={styles.actionCancel} onPress={() => setActionCustomer(null)} activeOpacity={0.7}>
               <Text style={styles.actionCancelText}>Cancel</Text>
             </TouchableOpacity>
@@ -721,6 +729,44 @@ export default function DashboardScreen() {
           <View style={styles.modalSheet}>
             <Text style={styles.modalTitle}>{isEditing ? 'Edit' : 'View'} — {viewing?.name}</Text>
             <ScrollView style={{ maxHeight: 450 }}>
+              {/* Photo block — upload only, no URL field */}
+              <View style={{ marginBottom: 14 }}>
+                <Text style={styles.label}>Photo</Text>
+                {(() => {
+                  const existing = avatarUri(viewing?.upload_photo);
+                  const display = customerPhotoUri || existing;
+                  if (!isEditing) {
+                    return display ? (
+                      <Image source={{ uri: display }} style={styles.photoPreview} />
+                    ) : (
+                      <View style={[styles.input, styles.inputReadOnly]}>
+                        <Text style={{ color: '#6b6360' }}>—</Text>
+                      </View>
+                    );
+                  }
+                  return (
+                    <View style={styles.photoEditRow}>
+                      {display ? (
+                        <Image source={{ uri: display }} style={styles.photoPreview} />
+                      ) : (
+                        <View style={[styles.photoPreview, styles.photoPlaceholder]}>
+                          <Ionicons name="image-outline" size={22} color="#6b6360" />
+                        </View>
+                      )}
+                      <TouchableOpacity
+                        style={styles.photoPickBtn}
+                        onPress={pickCustomerPhoto}
+                        activeOpacity={0.8}
+                      >
+                        <Ionicons name="cloud-upload-outline" size={16} color="#fff" />
+                        <Text style={styles.photoPickBtnText}>
+                          {customerPhotoUri ? 'Change Photo' : 'Upload Photo'}
+                        </Text>
+                      </TouchableOpacity>
+                    </View>
+                  );
+                })()}
+              </View>
               {HEALTH_FIELDS.map(renderField)}
             </ScrollView>
             <View style={styles.modalBtnRow}>
@@ -885,6 +931,30 @@ const styles = StyleSheet.create({
     backgroundColor: '#1f1b1a', color: '#fff',
   },
   inputReadOnly: { backgroundColor: '#1a1716' },
+  photoPreview: {
+    width: 72,
+    height: 72,
+    borderRadius: 12,
+    backgroundColor: '#1a1716',
+    borderWidth: 1,
+    borderColor: '#332e2b',
+  },
+  photoPlaceholder: { alignItems: 'center', justifyContent: 'center' },
+  photoEditRow: { flexDirection: 'row', alignItems: 'center', gap: 12 },
+  photoPickBtn: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    backgroundColor: '#1f1b1a',
+    borderWidth: 1,
+    borderColor: '#332e2b',
+    borderRadius: 12,
+    paddingVertical: 12,
+    paddingHorizontal: 14,
+  },
+  photoPickBtnText: { color: '#fff', fontSize: 14, fontWeight: '600' },
   modalBtnRow: { flexDirection: 'row', justifyContent: 'flex-end', marginTop: 16, gap: 10 },
   btn: { paddingHorizontal: 18, paddingVertical: 10, borderRadius: 14, minWidth: 90, alignItems: 'center' },
   btnPrimary: { backgroundColor: '#ffc803' },
