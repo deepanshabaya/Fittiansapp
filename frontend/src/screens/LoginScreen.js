@@ -68,7 +68,7 @@ export default function LoginScreen({ navigation }) {
 
   return (
     <SafeAreaView style={styles.safeArea} edges={['top', 'bottom']}>
-      <StatusBar barStyle="dark-content" backgroundColor="#f9fafb" />
+      <StatusBar barStyle="light-content" backgroundColor="#1a1716" />
       <KeyboardAvoidingView
         style={styles.flex}
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
@@ -127,64 +127,23 @@ export default function LoginScreen({ navigation }) {
 }
 
 const styles = StyleSheet.create({
-  safeArea: {
-    flex: 1,
-    backgroundColor: '#f9fafb',
-  },
-  flex: {
-    flex: 1,
-  },
+  safeArea: { flex: 1, backgroundColor: '#1a1716' },
+  flex: { flex: 1 },
   container: {
-    flexGrow: 1,
-    paddingHorizontal: 24,
-    paddingTop: 80,
-    paddingBottom: 32,
-    justifyContent: 'center',
+    flexGrow: 1, paddingHorizontal: 24, paddingTop: 80, paddingBottom: 32, justifyContent: 'center',
   },
-  title: {
-    fontSize: 28,
-    fontWeight: '700',
-    color: '#111827',
-    marginBottom: 4,
-  },
-  subtitle: {
-    fontSize: 14,
-    color: '#6b7280',
-    marginBottom: 36,
-  },
-  label: {
-    fontSize: 14,
-    color: '#374151',
-    marginBottom: 6,
-  },
+  title: { fontSize: 28, fontWeight: '800', color: '#ffc803', marginBottom: 4, letterSpacing: 0.3 },
+  subtitle: { fontSize: 14, color: '#a09890', marginBottom: 36 },
+  label: { fontSize: 13, color: '#a09890', marginBottom: 6, fontWeight: '600', letterSpacing: 0.5, textTransform: 'uppercase' },
   input: {
-    borderWidth: 1,
-    borderColor: '#e5e7eb',
-    borderRadius: 12,
-    paddingHorizontal: 12,
-    paddingVertical: 10,
-    fontSize: 14,
-    backgroundColor: '#fff',
-    marginBottom: 16,
+    borderWidth: 1, borderColor: '#332e2b', borderRadius: 12,
+    paddingHorizontal: 14, paddingVertical: 14, fontSize: 15,
+    backgroundColor: '#1f1b1a', color: '#fff', marginBottom: 16,
   },
   button: {
-    backgroundColor: '#2563eb',
-    paddingVertical: 14,
-    borderRadius: 999,
-    alignItems: 'center',
-    marginTop: 8,
+    backgroundColor: '#ffc803', paddingVertical: 16, borderRadius: 14, alignItems: 'center', marginTop: 8,
   },
-  buttonText: {
-    color: '#fff',
-    fontSize: 16,
-    fontWeight: '600',
-  },
-  linkButton: {
-    marginTop: 16,
-    alignItems: 'center',
-  },
-  linkText: {
-    color: '#2563eb',
-    fontSize: 14,
-  },
+  buttonText: { color: '#1a1716', fontSize: 16, fontWeight: '700' },
+  linkButton: { marginTop: 16, alignItems: 'center' },
+  linkText: { color: '#ffc803', fontSize: 14 },
 });

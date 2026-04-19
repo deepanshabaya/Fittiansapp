@@ -51,7 +51,7 @@ export default function RoleSelectionScreen({ navigation }) {
     // four edges. The centered layout with justifyContent:'center' also needs
     // the bottom inset respected so buttons don't sit on the home indicator.
     <SafeAreaView style={styles.safeArea} edges={['top', 'bottom']}>
-      <StatusBar barStyle="dark-content" backgroundColor="#f3f4f6" />
+      <StatusBar barStyle="light-content" backgroundColor="#1a1716" />
       {/*
         FIX: Wrapped in KeyboardAvoidingView + ScrollView so the role buttons
         stay reachable when the email input is focused and the keyboard opens.
@@ -96,61 +96,19 @@ export default function RoleSelectionScreen({ navigation }) {
 }
 
 const styles = StyleSheet.create({
-  safeArea: {
-    flex: 1,
-    backgroundColor: '#f3f4f6',
-  },
-  flex: {
-    flex: 1,
-  },
-  container: {
-    flexGrow: 1,
-    paddingHorizontal: 24,
-    paddingVertical: 32,
-    justifyContent: 'center',
-  },
-  title: {
-    fontSize: 28,
-    fontWeight: '700',
-    color: '#111827',
-    marginBottom: 8,
-  },
-  subtitle: {
-    fontSize: 15,
-    color: '#6b7280',
-    marginBottom: 24,
-  },
-  label: {
-    fontSize: 14,
-    color: '#374151',
-    marginBottom: 6,
-  },
+  safeArea: { flex: 1, backgroundColor: '#1a1716' },
+  flex: { flex: 1 },
+  container: { flexGrow: 1, paddingHorizontal: 24, paddingVertical: 32, justifyContent: 'center' },
+  title: { fontSize: 28, fontWeight: '800', color: '#ffc803', marginBottom: 8, letterSpacing: 0.3 },
+  subtitle: { fontSize: 15, color: '#a09890', marginBottom: 24 },
+  label: { fontSize: 13, color: '#a09890', marginBottom: 6, fontWeight: '600', letterSpacing: 0.5, textTransform: 'uppercase' },
   input: {
-    borderWidth: 1,
-    borderColor: '#e5e7eb',
-    borderRadius: 12,
-    paddingHorizontal: 12,
-    paddingVertical: 10,
-    fontSize: 14,
-    backgroundColor: '#ffffff',
-    marginBottom: 24,
+    borderWidth: 1, borderColor: '#332e2b', borderRadius: 12,
+    paddingHorizontal: 14, paddingVertical: 14, fontSize: 15,
+    backgroundColor: '#1f1b1a', color: '#fff', marginBottom: 24,
   },
-  button: {
-    backgroundColor: '#2563eb',
-    paddingVertical: 14,
-    borderRadius: 999,
-    alignItems: 'center',
-    marginBottom: 16,
-  },
-  buttonText: {
-    color: '#fff',
-    fontSize: 16,
-    fontWeight: '600',
-  },
-  secondaryButton: {
-    backgroundColor: '#e5e7eb',
-  },
-  secondaryButtonText: {
-    color: '#111827',
-  },
+  button: { backgroundColor: '#ffc803', paddingVertical: 16, borderRadius: 14, alignItems: 'center', marginBottom: 16 },
+  buttonText: { color: '#1a1716', fontSize: 16, fontWeight: '700' },
+  secondaryButton: { backgroundColor: 'transparent', borderWidth: 1.5, borderColor: '#ffc803' },
+  secondaryButtonText: { color: '#ffc803' },
 });

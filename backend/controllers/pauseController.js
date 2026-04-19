@@ -13,7 +13,7 @@ const requestPause = async (req, res, next) => {
       return res.status(400).json({ errors: errors.array() });
     }
 
-    const { programId, pauseUntilDate, reason } = req.body;
+    const { pauseUntilDate, reason } = req.body;
     const customerId = req.user.customerId || req.body.customerId;
 
     if (!customerId) {
@@ -22,7 +22,6 @@ const requestPause = async (req, res, next) => {
 
     const request = await createPauseRequest({
       customerId,
-      programId,
       pauseUntilDate,
       reason,
     });

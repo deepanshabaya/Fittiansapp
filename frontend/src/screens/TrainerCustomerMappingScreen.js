@@ -44,7 +44,7 @@ function CustomerCard({ customer, onMapPress }) {
           <Image source={{ uri: photoUri }} style={styles.avatar} />
         ) : (
           <View style={[styles.avatar, styles.avatarPlaceholder]}>
-            <Ionicons name="person" size={24} color="#94a3b8" />
+            <Ionicons name="person" size={24} color="#6b6360" />
           </View>
         )}
         <View style={styles.cardInfo}>
@@ -106,7 +106,7 @@ function TrainerRow({ trainer, selected, onPress }) {
         <Image source={{ uri: photoUri }} style={styles.trainerAvatar} />
       ) : (
         <View style={[styles.trainerAvatar, styles.avatarPlaceholder]}>
-          <Ionicons name="barbell" size={20} color="#94a3b8" />
+          <Ionicons name="barbell" size={20} color="#6b6360" />
         </View>
       )}
       <View style={styles.trainerInfo}>
@@ -115,7 +115,7 @@ function TrainerRow({ trainer, selected, onPress }) {
           <Text style={styles.trainerSpec}>{trainer.specialization}</Text>
         ) : null}
       </View>
-      {selected && <Ionicons name="checkmark-circle" size={22} color="#2563eb" />}
+      {selected && <Ionicons name="checkmark-circle" size={22} color="#ffc803" />}
     </TouchableOpacity>
   );
 }
@@ -208,7 +208,7 @@ export default function TrainerCustomerMappingScreen({ navigation }) {
     return (
       <SafeAreaView style={styles.safeArea} edges={['top', 'bottom']}>
         <View style={styles.centered}>
-          <ActivityIndicator size="large" color="#2563eb" />
+          <ActivityIndicator size="large" color="#ffc803" />
         </View>
       </SafeAreaView>
     );
@@ -216,12 +216,12 @@ export default function TrainerCustomerMappingScreen({ navigation }) {
 
   return (
     <SafeAreaView style={styles.safeArea} edges={['top', 'bottom']}>
-      <StatusBar barStyle="dark-content" backgroundColor="#f8fafc" />
+      <StatusBar barStyle="light-content" backgroundColor="#1a1716" />
 
       {/* Header */}
       <View style={styles.header}>
         <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}>
-          <Ionicons name="arrow-back" size={22} color="#1e293b" />
+          <Ionicons name="arrow-back" size={22} color="#fff" />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Trainer–Customer Mapping</Text>
         <View style={{ width: 38 }} />
@@ -256,7 +256,7 @@ export default function TrainerCustomerMappingScreen({ navigation }) {
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
         ListEmptyComponent={
           <View style={styles.centered}>
-            <Ionicons name="people-outline" size={48} color="#cbd5e1" />
+            <Ionicons name="people-outline" size={48} color="#6b6360" />
             <Text style={styles.emptyText}>
               {activeTab === 'mapped' ? 'No mapped customers' : 'No unmapped customers'}
             </Text>
@@ -284,7 +284,7 @@ export default function TrainerCustomerMappingScreen({ navigation }) {
               <Text style={styles.modalTitle}>Select Trainer</Text>
               <TouchableOpacity onPress={confirmMapping} disabled={submitting}>
                 {submitting ? (
-                  <ActivityIndicator size="small" color="#2563eb" />
+                  <ActivityIndicator size="small" color="#ffc803" />
                 ) : (
                   <Text style={[styles.modalConfirm, !selectedTrainerId && { opacity: 0.4 }]}>
                     Confirm
@@ -326,248 +326,75 @@ export default function TrainerCustomerMappingScreen({ navigation }) {
 
 // ────────────────────────────────────────────────────────
 const styles = StyleSheet.create({
-  safeArea: {
-    flex: 1,
-    backgroundColor: '#f8fafc',
-  },
-  centered: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: 48,
-  },
+  safeArea: { flex: 1, backgroundColor: '#1a1716' },
+  centered: { flex: 1, alignItems: 'center', justifyContent: 'center', paddingVertical: 48 },
 
-  // ── Header ──
   header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 20,
-    paddingVertical: 14,
-    borderBottomWidth: 1,
-    borderBottomColor: '#e2e8f0',
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
+    paddingHorizontal: 20, paddingVertical: 14, borderBottomWidth: 1, borderBottomColor: '#332e2b',
   },
-  backBtn: {
-    width: 38,
-    height: 38,
-    borderRadius: 12,
-    backgroundColor: '#e2e8f0',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  headerTitle: {
-    fontSize: 18,
-    fontWeight: '600',
-    color: '#0f172a',
-  },
+  backBtn: { width: 38, height: 38, borderRadius: 12, backgroundColor: '#252120', alignItems: 'center', justifyContent: 'center' },
+  headerTitle: { fontSize: 18, fontWeight: '600', color: '#fff' },
 
-  // ── Tabs ──
   tabContainer: {
-    flexDirection: 'row',
-    marginHorizontal: 16,
-    marginTop: 12,
-    backgroundColor: '#e2e8f0',
-    borderRadius: 12,
-    padding: 4,
+    flexDirection: 'row', marginHorizontal: 16, marginTop: 12,
+    backgroundColor: '#252120', borderRadius: 12, padding: 4,
   },
-  tab: {
-    flex: 1,
-    paddingVertical: 10,
-    alignItems: 'center',
-    borderRadius: 10,
-  },
-  tabActive: {
-    backgroundColor: '#fff',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.08,
-    shadowRadius: 2,
-    elevation: 2,
-  },
-  tabText: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#64748b',
-  },
-  tabTextActive: {
-    color: '#0f172a',
-  },
+  tab: { flex: 1, paddingVertical: 10, alignItems: 'center', borderRadius: 10 },
+  tabActive: { backgroundColor: '#1a1716', borderWidth: 1, borderColor: '#332e2b' },
+  tabText: { fontSize: 14, fontWeight: '600', color: '#6b6360' },
+  tabTextActive: { color: '#ffc803' },
 
-  // ── List ──
-  list: {
-    paddingHorizontal: 16,
-    paddingTop: 12,
-    paddingBottom: 32,
-  },
-  // ── Customer card ──
+  list: { paddingHorizontal: 16, paddingTop: 12, paddingBottom: 32 },
   card: {
-    backgroundColor: '#fff',
-    borderRadius: 16,
-    padding: 16,
-    marginBottom: 12,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.04,
-    shadowRadius: 4,
-    elevation: 2,
+    backgroundColor: '#252120', borderRadius: 16, padding: 16, marginBottom: 12,
+    borderWidth: 1, borderColor: '#332e2b',
   },
-  cardRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  avatar: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
-  },
-  avatarPlaceholder: {
-    backgroundColor: '#e2e8f0',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  cardInfo: {
-    flex: 1,
-    marginLeft: 12,
-  },
-  cardName: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#1e293b',
-  },
-  cardSub: {
-    fontSize: 13,
-    color: '#64748b',
-    marginTop: 2,
-  },
+  cardRow: { flexDirection: 'row', alignItems: 'center' },
+  avatar: { width: 48, height: 48, borderRadius: 24 },
+  avatarPlaceholder: { backgroundColor: '#1f1b1a', alignItems: 'center', justifyContent: 'center' },
+  cardInfo: { flex: 1, marginLeft: 12 },
+  cardName: { fontSize: 16, fontWeight: '600', color: '#fff' },
+  cardSub: { fontSize: 13, color: '#a09890', marginTop: 2 },
 
-  // ── Mapping row ──
   mappingRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    marginTop: 12,
-    paddingTop: 12,
-    borderTopWidth: 1,
-    borderTopColor: '#f1f5f9',
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
+    marginTop: 12, paddingTop: 12, borderTopWidth: 1, borderTopColor: '#332e2b',
   },
-  mappedBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-  },
-  mappedText: {
-    fontSize: 13,
-    color: '#16a34a',
-    fontWeight: '500',
-  },
-  unmappedBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-  },
-  unmappedText: {
-    fontSize: 13,
-    color: '#d97706',
-    fontWeight: '500',
-  },
+  mappedBadge: { flexDirection: 'row', alignItems: 'center', gap: 4 },
+  mappedText: { fontSize: 13, color: '#22c55e', fontWeight: '500' },
+  unmappedBadge: { flexDirection: 'row', alignItems: 'center', gap: 4 },
+  unmappedText: { fontSize: 13, color: '#f59e0b', fontWeight: '500' },
   mapBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-    backgroundColor: '#2563eb',
-    paddingHorizontal: 14,
-    paddingVertical: 8,
-    borderRadius: 10,
+    flexDirection: 'row', alignItems: 'center', gap: 4,
+    backgroundColor: '#ffc803', paddingHorizontal: 14, paddingVertical: 8, borderRadius: 10,
   },
-  changeBtn: {
-    backgroundColor: '#7c3aed',
-  },
-  mapBtnText: {
-    color: '#fff',
-    fontSize: 13,
-    fontWeight: '600',
-  },
+  changeBtn: { backgroundColor: '#a68500' },
+  mapBtnText: { color: '#1a1716', fontSize: 13, fontWeight: '700' },
 
-  // ── Empty state ──
-  emptyText: {
-    fontSize: 14,
-    color: '#94a3b8',
-    marginTop: 8,
-  },
+  emptyText: { fontSize: 14, color: '#6b6360', marginTop: 8 },
 
-  // ── Modal ──
-  modalOverlay: {
-    flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.4)',
-    justifyContent: 'flex-end',
-  },
+  modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'flex-end' },
   modalSheet: {
-    backgroundColor: '#fff',
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
-    maxHeight: '75%',
-    paddingBottom: 24,
+    backgroundColor: '#252120', borderTopLeftRadius: 20, borderTopRightRadius: 20,
+    maxHeight: '75%', paddingBottom: 24,
   },
   modalHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 20,
-    paddingVertical: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: '#e2e8f0',
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
+    paddingHorizontal: 20, paddingVertical: 16, borderBottomWidth: 1, borderBottomColor: '#332e2b',
   },
-  modalCancel: {
-    fontSize: 15,
-    color: '#64748b',
-  },
-  modalTitle: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#0f172a',
-  },
-  modalConfirm: {
-    fontSize: 15,
-    fontWeight: '600',
-    color: '#2563eb',
-  },
-  modalSubtitle: {
-    fontSize: 13,
-    color: '#64748b',
-    textAlign: 'center',
-    paddingVertical: 10,
-    backgroundColor: '#f8fafc',
-  },
+  modalCancel: { fontSize: 15, color: '#a09890' },
+  modalTitle: { fontSize: 16, fontWeight: '600', color: '#fff' },
+  modalConfirm: { fontSize: 15, fontWeight: '600', color: '#ffc803' },
+  modalSubtitle: { fontSize: 13, color: '#a09890', textAlign: 'center', paddingVertical: 10, backgroundColor: '#1f1b1a' },
 
-  // ── Trainer row ──
   trainerRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 20,
-    paddingVertical: 14,
-    borderBottomWidth: 1,
-    borderBottomColor: '#f1f5f9',
+    flexDirection: 'row', alignItems: 'center',
+    paddingHorizontal: 20, paddingVertical: 14, borderBottomWidth: 1, borderBottomColor: '#332e2b',
   },
-  trainerRowSelected: {
-    backgroundColor: '#eff6ff',
-  },
-  trainerAvatar: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-  },
-  trainerInfo: {
-    flex: 1,
-    marginLeft: 12,
-  },
-  trainerName: {
-    fontSize: 15,
-    fontWeight: '600',
-    color: '#1e293b',
-  },
-  trainerSpec: {
-    fontSize: 12,
-    color: '#64748b',
-    marginTop: 2,
-  },
+  trainerRowSelected: { backgroundColor: 'rgba(255,200,3,0.08)' },
+  trainerAvatar: { width: 44, height: 44, borderRadius: 22 },
+  trainerInfo: { flex: 1, marginLeft: 12 },
+  trainerName: { fontSize: 15, fontWeight: '600', color: '#fff' },
+  trainerSpec: { fontSize: 12, color: '#a09890', marginTop: 2 },
 });

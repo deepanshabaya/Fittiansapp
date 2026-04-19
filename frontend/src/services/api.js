@@ -304,14 +304,14 @@ export async function cancelSession({ sessionId, token }) {
   return handleResponse(res);
 }
 
-export async function pauseSessions({ programId, pauseUntilDate, reason, token }) {
+export async function pauseSessions({ pauseUntilDate, reason, token }) {
   const res = await fetchWithTimeout(`${BASE_URL}/api/pause/request`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
       Authorization: `Bearer ${token}`,
     },
-    body: JSON.stringify({ programId, pauseUntilDate, reason }),
+    body: JSON.stringify({ pauseUntilDate, reason }),
   });
   return handleResponse(res);
 }

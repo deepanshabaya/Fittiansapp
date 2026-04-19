@@ -15,7 +15,6 @@ router.post(
   authenticate,
   authorizeRoles('customer'),
   [
-    body('programId').isInt().withMessage('programId is required'),
     body('pauseUntilDate').isISO8601().withMessage('pauseUntilDate is required'),
     body('reason').isLength({ min: 3 }).withMessage('reason is required'),
   ],

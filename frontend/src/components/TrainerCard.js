@@ -72,24 +72,19 @@ export default function TrainerCard({ trainer }) {
 
 const styles = StyleSheet.create({
   card: {
-    backgroundColor: '#1E1E1E',
+    backgroundColor: '#252120',
     borderRadius: 16,
-    padding: 16,
-    shadowColor: '#000',
-    shadowOpacity: 0.3,
-    shadowRadius: 10,
-    shadowOffset: { width: 0, height: 4 },
-    elevation: 5,
+    padding: 18,
     marginVertical: 12,
     borderWidth: 1,
-    borderColor: '#333333',
+    borderColor: '#332e2b',
   },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
   },
   headerText: {
-    marginLeft: 12,
+    marginLeft: 14,
     flex: 1,
   },
   avatar: {
@@ -97,10 +92,10 @@ const styles = StyleSheet.create({
     height: 64,
     borderRadius: 32,
     borderWidth: 2,
-    borderColor: '#FFC107',
+    borderColor: '#ffc803',
   },
   placeholderAvatar: {
-    backgroundColor: '#FFC107',
+    backgroundColor: '#ffc803',
     justifyContent: 'center',
     alignItems: 'center',
     borderWidth: 0,
@@ -108,45 +103,45 @@ const styles = StyleSheet.create({
   avatarInitial: {
     fontSize: 24,
     fontWeight: '700',
-    color: '#121212',
+    color: '#1a1716',
   },
   name: {
     fontSize: 20,
     fontWeight: '700',
-    color: '#FFC107',
+    color: '#ffc803',
   },
   meta: {
     fontSize: 14,
-    color: '#E0E0E0',
+    color: '#a09890',
     marginTop: 4,
   },
   certifications: {
-    marginTop: 12,
+    marginTop: 14,
     fontSize: 14,
-    color: '#A0A0A0',
+    color: '#a09890',
     lineHeight: 20,
   },
   videoContainer: {
     marginTop: 20,
     borderRadius: 12,
     overflow: 'hidden',
-    backgroundColor: '#000000',
+    backgroundColor: '#1a1716',
     borderWidth: 1,
-    borderColor: '#333333',
+    borderColor: '#332e2b',
   },
   videoTitle: {
-    color: '#FFFFFF',
+    color: '#fff',
     fontSize: 15,
     fontWeight: '600',
     paddingHorizontal: 12,
     paddingTop: 12,
     paddingBottom: 8,
-    backgroundColor: '#1E1E1E',
+    backgroundColor: '#252120',
   },
   webview: {
     width: '100%',
     aspectRatio: 9 / 16,
-    backgroundColor: '#000000',
+    backgroundColor: '#1a1716',
   },
 });
 

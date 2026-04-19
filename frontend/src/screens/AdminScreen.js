@@ -22,7 +22,7 @@ export default function AdminScreen({ navigation }) {
 
   return (
     <SafeAreaView style={styles.safeArea} edges={['top', 'bottom']}>
-      <StatusBar barStyle="light-content" backgroundColor="#1e293b" />
+      <StatusBar barStyle="light-content" backgroundColor="#1a1716" />
 
       {/* Header */}
       <View style={styles.header}>
@@ -44,8 +44,8 @@ export default function AdminScreen({ navigation }) {
           activeOpacity={0.8}
           onPress={() => navigation.navigate('CreateUser')}
         >
-          <View style={[styles.iconCircle, { backgroundColor: '#dbeafe' }]}>
-            <Ionicons name="person-add" size={28} color="#2563eb" />
+          <View style={[styles.iconCircle, { backgroundColor: 'rgba(255,200,3,0.10)' }]}>
+            <Ionicons name="person-add" size={28} color="#ffc803" />
           </View>
           <View style={styles.cardContent}>
             <Text style={styles.cardTitle}>Create New User</Text>
@@ -53,7 +53,7 @@ export default function AdminScreen({ navigation }) {
               Add a new Trainer or Customer to the system
             </Text>
           </View>
-          <Ionicons name="chevron-forward" size={20} color="#9ca3af" />
+          <Ionicons name="chevron-forward" size={20} color="#6b6360" />
         </TouchableOpacity>
 
         {/* Card 2: Edit User */}
@@ -62,8 +62,8 @@ export default function AdminScreen({ navigation }) {
           activeOpacity={0.8}
           onPress={() => navigation.navigate('EditUser')}
         >
-          <View style={[styles.iconCircle, { backgroundColor: '#e0e7ff' }]}>
-            <Ionicons name="create-outline" size={28} color="#4f46e5" />
+          <View style={[styles.iconCircle, { backgroundColor: 'rgba(255,200,3,0.10)' }]}>
+            <Ionicons name="create-outline" size={28} color="#ffc803" />
           </View>
           <View style={styles.cardContent}>
             <Text style={styles.cardTitle}>Edit User</Text>
@@ -71,7 +71,7 @@ export default function AdminScreen({ navigation }) {
               Update customer or trainer details
             </Text>
           </View>
-          <Ionicons name="chevron-forward" size={20} color="#9ca3af" />
+          <Ionicons name="chevron-forward" size={20} color="#6b6360" />
         </TouchableOpacity>
 
         {/* Card 3: Trainer–Customer Mapping */}
@@ -80,8 +80,8 @@ export default function AdminScreen({ navigation }) {
           activeOpacity={0.8}
           onPress={() => navigation.navigate('TrainerCustomerMapping')}
         >
-          <View style={[styles.iconCircle, { backgroundColor: '#fef3c7' }]}>
-            <Ionicons name="swap-horizontal" size={28} color="#d97706" />
+          <View style={[styles.iconCircle, { backgroundColor: 'rgba(255,200,3,0.10)' }]}>
+            <Ionicons name="swap-horizontal" size={28} color="#ffc803" />
           </View>
           <View style={styles.cardContent}>
             <Text style={styles.cardTitle}>Trainer–Customer Mapping</Text>
@@ -89,7 +89,7 @@ export default function AdminScreen({ navigation }) {
               Map trainers to their customers
             </Text>
           </View>
-          <Ionicons name="chevron-forward" size={20} color="#9ca3af" />
+          <Ionicons name="chevron-forward" size={20} color="#6b6360" />
         </TouchableOpacity>
 
       </View>
@@ -98,80 +98,30 @@ export default function AdminScreen({ navigation }) {
 }
 
 const styles = StyleSheet.create({
-  safeArea: {
-    flex: 1,
-    backgroundColor: '#0f172a',
-  },
+  safeArea: { flex: 1, backgroundColor: '#1a1716' },
   header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 24,
-    paddingTop: 20,
-    paddingBottom: 24,
-    backgroundColor: '#1e293b',
-    borderBottomLeftRadius: 24,
-    borderBottomRightRadius: 24,
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
+    paddingHorizontal: 24, paddingTop: 20, paddingBottom: 24,
+    backgroundColor: '#252120', borderBottomLeftRadius: 24, borderBottomRightRadius: 24,
   },
-  headerTitle: {
-    fontSize: 24,
-    fontWeight: '700',
-    color: '#f8fafc',
-  },
-  headerSubtitle: {
-    fontSize: 13,
-    color: '#94a3b8',
-    marginTop: 2,
-  },
-  logoutBtn: {
-    padding: 8,
-    borderRadius: 12,
-    backgroundColor: '#1e293b',
-    borderWidth: 1,
-    borderColor: '#334155',
-  },
+  headerTitle: { fontSize: 24, fontWeight: '800', color: '#ffc803' },
+  headerSubtitle: { fontSize: 13, color: '#a09890', marginTop: 2 },
+  logoutBtn: { padding: 8, borderRadius: 12, backgroundColor: '#252120', borderWidth: 1, borderColor: '#332e2b' },
   container: {
-    flex: 1,
-    paddingHorizontal: 20,
-    paddingTop: 28,
-    backgroundColor: '#f8fafc',
-    borderTopLeftRadius: 24,
-    borderTopRightRadius: 24,
-    marginTop: -1,
+    flex: 1, paddingHorizontal: 20, paddingTop: 28,
+    backgroundColor: '#1a1716',
   },
   card: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#ffffff',
-    padding: 18,
-    borderRadius: 16,
-    marginBottom: 16,
-    // Shadow
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.06,
-    shadowRadius: 8,
-    elevation: 3,
+    flexDirection: 'row', alignItems: 'center',
+    backgroundColor: '#252120', padding: 18, borderRadius: 16, marginBottom: 16,
+    borderWidth: 1, borderColor: '#332e2b',
   },
   iconCircle: {
-    width: 52,
-    height: 52,
-    borderRadius: 16,
-    alignItems: 'center',
-    justifyContent: 'center',
+    width: 52, height: 52, borderRadius: 16,
+    alignItems: 'center', justifyContent: 'center',
+    backgroundColor: 'rgba(255,200,3,0.10)',
   },
-  cardContent: {
-    flex: 1,
-    marginLeft: 14,
-  },
-  cardTitle: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#1e293b',
-  },
-  cardDesc: {
-    fontSize: 12,
-    color: '#64748b',
-    marginTop: 3,
-  },
+  cardContent: { flex: 1, marginLeft: 14 },
+  cardTitle: { fontSize: 16, fontWeight: '600', color: '#ffffff' },
+  cardDesc: { fontSize: 12, color: '#a09890', marginTop: 3 },
 });

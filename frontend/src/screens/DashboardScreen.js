@@ -28,6 +28,7 @@ import {
   syncSteps,
   fetchTodaySessions,
 } from '../services/api';
+import { Ionicons } from '@expo/vector-icons';
 import TrainerCard from '../components/TrainerCard';
 import { isStepCountAvailable, requestStepPermission, getTodaySteps } from '../utils/stepCounter';
 
@@ -357,7 +358,7 @@ export default function DashboardScreen() {
         <View key={f.key} style={{ marginBottom: 12 }}>
           <Text style={styles.label}>{f.label}</Text>
           <View style={[styles.input, styles.inputReadOnly]}>
-            <Text style={{ color: form[f.key] ? '#111' : '#999' }}>{form[f.key] || '—'}</Text>
+            <Text style={{ color: form[f.key] ? '#fff' : '#6b6360' }}>{form[f.key] || '—'}</Text>
           </View>
         </View>
       );
@@ -367,7 +368,7 @@ export default function DashboardScreen() {
         <Text style={styles.label}>{f.label}</Text>
         {f.type === 'picker' ? (
           <TouchableOpacity style={styles.input} onPress={() => setPickerFor(f.key)}>
-            <Text style={{ color: form[f.key] ? '#111' : '#999' }}>{form[f.key] || 'Select...'}</Text>
+            <Text style={{ color: form[f.key] ? '#fff' : '#6b6360' }}>{form[f.key] || 'Select...'}</Text>
           </TouchableOpacity>
         ) : (
           <TextInput
@@ -376,6 +377,7 @@ export default function DashboardScreen() {
             onChangeText={(v) => setForm(p => ({ ...p, [f.key]: v }))}
             keyboardType={f.type === 'number' ? 'numeric' : 'default'}
             placeholder={f.label}
+            placeholderTextColor="#6b6360"
           />
         )}
       </View>
@@ -395,6 +397,12 @@ export default function DashboardScreen() {
     if (c) openProgressForm(c);
   };
 
+  const handleMarkFromAction = (status) => {
+    const c = actionCustomer;
+    setActionCustomer(null);
+    if (c) handleMarkSession(c.id, status);
+  };
+
   const renderCustomerCard = (c) => {
     const sessionStatus = todaySessions[c.id];
     const isMarking = !!markingIds[c.id];
@@ -402,7 +410,7 @@ export default function DashboardScreen() {
 
     return (
       <View key={c.id} style={styles.card}>
-        <TouchableOpacity style={{ flexDirection: 'row', flex: 1, alignItems: 'center' }} onPress={() => setActionCustomer(c)}>
+        <TouchableOpacity style={styles.cardTouchable} onPress={() => setActionCustomer(c)} activeOpacity={0.7}>
           {c.upload_photo ? (
             <Image source={{ uri: c.upload_photo }} style={styles.avatar} />
           ) : (
@@ -412,32 +420,52 @@ export default function DashboardScreen() {
           )}
           <View style={{ flex: 1 }}>
             <Text style={styles.cardName}>{c.name}</Text>
-            <Text style={styles.cardMeta}>
-              Total: {c.total_sessions ?? 0} · Done: {c.completed_sessions ?? 0} · Missed: {c.missed_sessions ?? 0}
-            </Text>
+            <View style={styles.cardStatsRow}>
+              <View style={styles.cardStatChip}>
+                <Text style={styles.cardStatVal}>{c.total_sessions ?? 0}</Text>
+                <Text style={styles.cardStatLabel}>Total</Text>
+              </View>
+              <View style={styles.cardStatChip}>
+                <Text style={[styles.cardStatVal, { color: '#22c55e' }]}>{c.completed_sessions ?? 0}</Text>
+                <Text style={styles.cardStatLabel}>Done</Text>
+              </View>
+              <View style={styles.cardStatChip}>
+                <Text style={[styles.cardStatVal, { color: '#ef4444' }]}>{c.missed_sessions ?? 0}</Text>
+                <Text style={styles.cardStatLabel}>Missed</Text>
+              </View>
+            </View>
             {c.address ? <Text style={styles.cardMeta} numberOfLines={1}>{c.address}</Text> : null}
             <Text style={styles.tag}>{programTag}</Text>
           </View>
         </TouchableOpacity>
 
-        {/* Right side: session marking */}
+        {/* Session marking */}
         <View style={styles.cardActions}>
-          <View style={styles.sessionBtns}>
-            <TouchableOpacity
-              style={[styles.sesBtn, sessionStatus === 'completed' && styles.sesBtnActive, isMarking && { opacity: 0.5 }]}
-              onPress={() => handleMarkSession(c.id, 'completed')}
-              disabled={isMarking}
-            >
-              <Text style={styles.sesBtnText}>✓</Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={[styles.sesBtn, styles.sesBtnMiss, sessionStatus === 'missed' && styles.sesBtnMissActive, isMarking && { opacity: 0.5 }]}
-              onPress={() => handleMarkSession(c.id, 'missed')}
-              disabled={isMarking}
-            >
-              <Text style={styles.sesBtnText}>✗</Text>
-            </TouchableOpacity>
-          </View>
+          <TouchableOpacity
+            style={[
+              styles.sesBtn,
+              sessionStatus === 'completed' && styles.sesBtnActive,
+              isMarking && { opacity: 0.4 },
+            ]}
+            onPress={() => handleMarkSession(c.id, 'completed')}
+            disabled={isMarking}
+            activeOpacity={0.7}
+          >
+            <Ionicons name={sessionStatus === 'completed' ? 'checkmark-circle' : 'checkmark-circle-outline'} size={18} color={sessionStatus === 'completed' ? '#fff' : '#a09890'} />
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={[
+              styles.sesBtn,
+              styles.sesBtnMiss,
+              sessionStatus === 'missed' && styles.sesBtnMissActive,
+              isMarking && { opacity: 0.4 },
+            ]}
+            onPress={() => handleMarkSession(c.id, 'missed')}
+            disabled={isMarking}
+            activeOpacity={0.7}
+          >
+            <Ionicons name={sessionStatus === 'missed' ? 'close-circle' : 'close-circle-outline'} size={18} color={sessionStatus === 'missed' ? '#fff' : '#a09890'} />
+          </TouchableOpacity>
         </View>
       </View>
     );
@@ -481,7 +509,7 @@ export default function DashboardScreen() {
 
   return (
     <SafeAreaView style={styles.safeArea} edges={['top']}>
-      <StatusBar barStyle="light-content" backgroundColor="#121212" />
+      <StatusBar barStyle="light-content" backgroundColor="#1a1716" />
 
       {/* Customer tab bar */}
       {role === 'customer' && (
@@ -504,7 +532,7 @@ export default function DashboardScreen() {
       <ScrollView
         style={styles.container}
         contentContainerStyle={[styles.content, { paddingBottom: insets.bottom + 24 }]}
-        refreshControl={<RefreshControl refreshing={loading} onRefresh={onRefresh} tintColor="#FFC107" />}
+        refreshControl={<RefreshControl refreshing={loading} onRefresh={onRefresh} tintColor="#ffc803" />}
       >
         {/* ── CUSTOMER: My Details tab ── */}
         {role === 'customer' && customerTab === 'details' && (
@@ -602,7 +630,7 @@ export default function DashboardScreen() {
                   <Text style={styles.bigNum}>{dashData.steps_today ?? '—'}</Text>
                   {stepsAvailable && (
                     <TouchableOpacity style={styles.syncBtn} onPress={handleSyncSteps} disabled={stepsSyncing}>
-                      {stepsSyncing ? <ActivityIndicator color="#121212" /> :
+                      {stepsSyncing ? <ActivityIndicator color="#1a1716" /> :
                         <Text style={styles.syncBtnText}>Sync from Device</Text>}
                     </TouchableOpacity>
                   )}
@@ -652,15 +680,35 @@ export default function DashboardScreen() {
         <TouchableOpacity style={styles.modalBackdrop} activeOpacity={1} onPress={() => setActionCustomer(null)}>
           <View style={styles.actionSheet}>
             <Text style={styles.actionTitle}>{actionCustomer?.name}</Text>
-            <TouchableOpacity style={styles.actionBtn} onPress={handleViewDetails}>
-              <Text style={styles.actionBtnIcon}>i</Text>
+            <TouchableOpacity style={styles.actionBtn} onPress={handleViewDetails} activeOpacity={0.7}>
+              <View style={styles.actionBtnIconWrap}>
+                <Ionicons name="person-outline" size={18} color="#ffc803" />
+              </View>
               <Text style={styles.actionBtnText}>View Details</Text>
+              <Ionicons name="chevron-forward" size={16} color="#6b6360" />
             </TouchableOpacity>
-            <TouchableOpacity style={[styles.actionBtn, styles.actionBtnProgress]} onPress={handleUpdateProgress}>
-              <Text style={styles.actionBtnIcon}>+</Text>
+            <TouchableOpacity style={styles.actionBtn} onPress={handleUpdateProgress} activeOpacity={0.7}>
+              <View style={styles.actionBtnIconWrap}>
+                <Ionicons name="trending-up-outline" size={18} color="#ffc803" />
+              </View>
               <Text style={styles.actionBtnText}>Update Progress</Text>
+              <Ionicons name="chevron-forward" size={16} color="#6b6360" />
             </TouchableOpacity>
-            <TouchableOpacity style={styles.actionCancel} onPress={() => setActionCustomer(null)}>
+            <TouchableOpacity style={styles.actionBtn} onPress={() => handleMarkFromAction('completed')} activeOpacity={0.7}>
+              <View style={styles.actionBtnIconWrap}>
+                <Ionicons name="checkmark-circle-outline" size={18} color="#22c55e" />
+              </View>
+              <Text style={styles.actionBtnText}>Mark Completed</Text>
+              <Ionicons name="chevron-forward" size={16} color="#6b6360" />
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.actionBtn} onPress={() => handleMarkFromAction('missed')} activeOpacity={0.7}>
+              <View style={styles.actionBtnIconWrap}>
+                <Ionicons name="close-circle-outline" size={18} color="#ef4444" />
+              </View>
+              <Text style={styles.actionBtnText}>Mark Missed</Text>
+              <Ionicons name="chevron-forward" size={16} color="#6b6360" />
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.actionCancel} onPress={() => setActionCustomer(null)} activeOpacity={0.7}>
               <Text style={styles.actionCancelText}>Cancel</Text>
             </TouchableOpacity>
           </View>
@@ -712,6 +760,7 @@ export default function DashboardScreen() {
                         keyboardType={f.multiline ? 'default' : 'numeric'}
                         multiline={f.multiline}
                         placeholder={f.label}
+                        placeholderTextColor="#6b6360"
                       />
                     </View>
                   ))}
@@ -754,147 +803,143 @@ export default function DashboardScreen() {
 // STYLES
 // ═══════════════════════════════════════════════════════
 const styles = StyleSheet.create({
-  safeArea: { flex: 1, backgroundColor: '#121212' },
-  container: { flex: 1, backgroundColor: '#121212' },
+  safeArea: { flex: 1, backgroundColor: '#1a1716' },
+  container: { flex: 1, backgroundColor: '#1a1716' },
   content: { paddingHorizontal: 20, paddingTop: 16 },
-  title: {
-    fontSize: 28, fontWeight: '800', color: '#FFC107',
-    marginBottom: 16, textTransform: 'uppercase', letterSpacing: 1,
-  },
+  title: { fontSize: 28, fontWeight: '800', color: '#ffc803', marginBottom: 16, letterSpacing: 0.3 },
 
   // Tab bar (customer)
-  tabBar: {
-    flexDirection: 'row', backgroundColor: '#1E1E1E',
-    borderBottomWidth: 1, borderBottomColor: '#333',
-  },
+  tabBar: { flexDirection: 'row', backgroundColor: '#252120', borderBottomWidth: 1, borderBottomColor: '#332e2b' },
   tabBtn: { flex: 1, paddingVertical: 12, alignItems: 'center' },
-  tabBtnActive: { borderBottomWidth: 2, borderBottomColor: '#FFC107' },
-  tabText: { color: '#888', fontSize: 14, fontWeight: '600' },
-  tabTextActive: { color: '#FFC107' },
+  tabBtnActive: { borderBottomWidth: 2, borderBottomColor: '#ffc803' },
+  tabText: { color: '#6b6360', fontSize: 14, fontWeight: '600' },
+  tabTextActive: { color: '#ffc803' },
 
   // Stats
   statsRow: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 16 },
   statCard: {
-    flex: 1, backgroundColor: '#1E1E1E', borderRadius: 12,
-    padding: 14, alignItems: 'center', marginHorizontal: 4,
+    flex: 1, backgroundColor: '#252120', borderRadius: 14, padding: 14,
+    alignItems: 'center', marginHorizontal: 4, borderWidth: 1, borderColor: '#332e2b',
   },
-  statNum: { fontSize: 28, fontWeight: '800', color: '#FFC107' },
-  statLabel: { fontSize: 11, color: '#A0A0A0', marginTop: 4, textTransform: 'uppercase' },
+  statNum: { fontSize: 28, fontWeight: '800', color: '#ffc803' },
+  statLabel: { fontSize: 11, color: '#a09890', marginTop: 4, textTransform: 'uppercase' },
 
-  section: { backgroundColor: '#1E1E1E', borderRadius: 12, padding: 16, marginBottom: 12 },
-  sectionTitle: { fontSize: 16, fontWeight: '600', color: '#FFFFFF', marginBottom: 8 },
-  bigNum: { fontSize: 36, fontWeight: '800', color: '#FFC107', textAlign: 'center', marginVertical: 4 },
-  syncBtn: {
-    backgroundColor: '#FFC107', borderRadius: 20, paddingVertical: 8,
-    paddingHorizontal: 16, alignSelf: 'center', marginTop: 8,
-  },
-  syncBtnText: { color: '#121212', fontWeight: '700', fontSize: 13 },
-  noteText: { color: '#D1D5DB', fontSize: 14, lineHeight: 20 },
+  section: { backgroundColor: '#252120', borderRadius: 14, padding: 16, marginBottom: 12, borderWidth: 1, borderColor: '#332e2b' },
+  sectionTitle: { fontSize: 16, fontWeight: '600', color: '#ffffff', marginBottom: 8 },
+  bigNum: { fontSize: 36, fontWeight: '800', color: '#ffc803', textAlign: 'center', marginVertical: 4 },
+  syncBtn: { backgroundColor: '#ffc803', borderRadius: 12, paddingVertical: 8, paddingHorizontal: 16, alignSelf: 'center', marginTop: 8 },
+  syncBtnText: { color: '#1a1716', fontWeight: '700', fontSize: 13 },
+  noteText: { color: '#a09890', fontSize: 14, lineHeight: 20 },
 
   // Chart
   chartContainer: { flexDirection: 'row', alignItems: 'flex-end', justifyContent: 'space-around', height: 120 },
   chartBar: { alignItems: 'center', flex: 1 },
-  bar: { width: 22, backgroundColor: '#FFC107', borderRadius: 4, marginVertical: 4 },
-  chartVal: { color: '#A0A0A0', fontSize: 10 },
-  chartLabel: { color: '#888', fontSize: 10 },
+  bar: { width: 22, backgroundColor: '#ffc803', borderRadius: 4, marginVertical: 4 },
+  chartVal: { color: '#a09890', fontSize: 10 },
+  chartLabel: { color: '#6b6360', fontSize: 10 },
 
-  error: { color: '#EF4444', marginBottom: 8 },
-  info: { fontSize: 14, color: '#A0A0A0', marginTop: 8 },
+  error: { color: '#ef4444', marginBottom: 8 },
+  info: { fontSize: 14, color: '#a09890', marginTop: 8 },
 
   // Customer card (trainer view)
   card: {
-    flexDirection: 'row', backgroundColor: '#1E1E1E', borderRadius: 12,
-    padding: 12, marginBottom: 10, alignItems: 'center',
+    flexDirection: 'row', backgroundColor: '#252120', borderRadius: 16,
+    padding: 14, marginBottom: 12, alignItems: 'center',
+    borderWidth: 1, borderColor: '#332e2b',
   },
-  avatar: { width: 48, height: 48, borderRadius: 24, marginRight: 10 },
-  avatarPlaceholder: { backgroundColor: '#333', justifyContent: 'center', alignItems: 'center' },
-  avatarInitial: { color: '#FFC107', fontSize: 20, fontWeight: '700' },
-  cardName: { color: '#fff', fontSize: 15, fontWeight: '600' },
-  cardMeta: { color: '#A0A0A0', fontSize: 11, marginTop: 1 },
+  cardTouchable: { flexDirection: 'row', flex: 1, alignItems: 'center' },
+  avatar: { width: 48, height: 48, borderRadius: 24, marginRight: 12 },
+  avatarPlaceholder: { backgroundColor: '#1f1b1a', justifyContent: 'center', alignItems: 'center' },
+  avatarInitial: { color: '#ffc803', fontSize: 20, fontWeight: '700' },
+  cardName: { color: '#fff', fontSize: 15, fontWeight: '700' },
+  cardStatsRow: { flexDirection: 'row', marginTop: 4, gap: 8 },
+  cardStatChip: { flexDirection: 'row', alignItems: 'center', gap: 3 },
+  cardStatVal: { color: '#ffc803', fontSize: 13, fontWeight: '700' },
+  cardStatLabel: { color: '#6b6360', fontSize: 11 },
+  cardMeta: { color: '#a09890', fontSize: 11, marginTop: 3 },
   tag: {
-    color: '#121212', backgroundColor: '#FFC107', alignSelf: 'flex-start',
-    paddingHorizontal: 6, paddingVertical: 1, borderRadius: 4, marginTop: 3,
-    fontSize: 10, fontWeight: '700',
+    color: '#1a1716', backgroundColor: '#ffc803', alignSelf: 'flex-start',
+    paddingHorizontal: 8, paddingVertical: 2, borderRadius: 6, marginTop: 5,
+    fontSize: 10, fontWeight: '700', overflow: 'hidden',
   },
 
   // Card right actions
-  cardActions: { alignItems: 'center', marginLeft: 6 },
-  sessionBtns: { flexDirection: 'row', marginBottom: 6 },
+  cardActions: { alignItems: 'center', marginLeft: 8, gap: 6 },
   sesBtn: {
-    width: 30, height: 30, borderRadius: 15, backgroundColor: '#22c55e',
-    justifyContent: 'center', alignItems: 'center', marginHorizontal: 2,
+    width: 36, height: 36, borderRadius: 12, backgroundColor: '#1f1b1a',
+    justifyContent: 'center', alignItems: 'center',
+    borderWidth: 1, borderColor: '#332e2b',
   },
-  sesBtnActive: { backgroundColor: '#16a34a', borderWidth: 2, borderColor: '#fff' },
-  sesBtnMiss: { backgroundColor: '#ef4444' },
-  sesBtnMissActive: { backgroundColor: '#dc2626', borderWidth: 2, borderColor: '#fff' },
-  sesBtnText: { color: '#fff', fontWeight: '800', fontSize: 14 },
+  sesBtnActive: { backgroundColor: '#16a34a', borderColor: '#22c55e' },
+  sesBtnMiss: {},
+  sesBtnMissActive: { backgroundColor: '#dc2626', borderColor: '#ef4444' },
 
   // Modals
   modalBackdrop: { flex: 1, backgroundColor: 'rgba(0,0,0,0.6)', justifyContent: 'center', padding: 20 },
-  modalSheet: { backgroundColor: '#fff', borderRadius: 16, padding: 20 },
-  modalTitle: { fontSize: 18, fontWeight: '700', marginBottom: 12, color: '#111' },
-  label: { fontSize: 13, color: '#374151', marginBottom: 4 },
+  modalSheet: { backgroundColor: '#252120', borderRadius: 16, padding: 20, borderWidth: 1, borderColor: '#332e2b' },
+  modalTitle: { fontSize: 18, fontWeight: '700', marginBottom: 12, color: '#fff' },
+  label: { fontSize: 13, color: '#a09890', marginBottom: 4 },
   input: {
-    borderWidth: 1, borderColor: '#e5e7eb', borderRadius: 10,
-    paddingHorizontal: 12, paddingVertical: 10, fontSize: 14, backgroundColor: '#fff',
+    borderWidth: 1, borderColor: '#332e2b', borderRadius: 12,
+    paddingHorizontal: 12, paddingVertical: 10, fontSize: 14,
+    backgroundColor: '#1f1b1a', color: '#fff',
   },
-  inputReadOnly: { backgroundColor: '#f9fafb' },
+  inputReadOnly: { backgroundColor: '#1a1716' },
   modalBtnRow: { flexDirection: 'row', justifyContent: 'flex-end', marginTop: 16, gap: 10 },
-  btn: { paddingHorizontal: 18, paddingVertical: 10, borderRadius: 999, minWidth: 90, alignItems: 'center' },
-  btnPrimary: { backgroundColor: '#2563eb' },
-  btnPrimaryText: { color: '#fff', fontWeight: '600' },
-  btnGhost: { backgroundColor: '#f3f4f6' },
-  btnGhostText: { color: '#374151', fontWeight: '600' },
+  btn: { paddingHorizontal: 18, paddingVertical: 10, borderRadius: 14, minWidth: 90, alignItems: 'center' },
+  btnPrimary: { backgroundColor: '#ffc803' },
+  btnPrimaryText: { color: '#1a1716', fontWeight: '700' },
+  btnGhost: { backgroundColor: '#1f1b1a', borderWidth: 1, borderColor: '#332e2b' },
+  btnGhostText: { color: '#a09890', fontWeight: '600' },
 
   progressGroupTitle: {
-    fontSize: 14, fontWeight: '700', color: '#2563eb',
+    fontSize: 14, fontWeight: '700', color: '#ffc803',
     marginTop: 12, marginBottom: 6, borderBottomWidth: 1,
-    borderBottomColor: '#e5e7eb', paddingBottom: 4,
+    borderBottomColor: '#332e2b', paddingBottom: 4,
   },
 
   // Action picker modal
   actionSheet: {
-    backgroundColor: '#fff', borderRadius: 16, padding: 24,
-    alignItems: 'center', marginHorizontal: 20,
+    backgroundColor: '#252120', borderRadius: 20, padding: 20,
+    marginHorizontal: 20, borderWidth: 1, borderColor: '#332e2b',
   },
-  actionTitle: {
-    fontSize: 18, fontWeight: '700', color: '#111', marginBottom: 20,
-  },
+  actionTitle: { fontSize: 18, fontWeight: '700', color: '#fff', marginBottom: 16, textAlign: 'center' },
   actionBtn: {
-    flexDirection: 'row', alignItems: 'center', backgroundColor: '#2563eb',
-    borderRadius: 12, paddingVertical: 14, paddingHorizontal: 20,
-    width: '100%', marginBottom: 10,
+    flexDirection: 'row', alignItems: 'center',
+    backgroundColor: '#1f1b1a', borderRadius: 14,
+    paddingVertical: 14, paddingHorizontal: 16,
+    marginBottom: 8, borderWidth: 1, borderColor: '#332e2b',
   },
-  actionBtnProgress: { backgroundColor: '#16a34a' },
-  actionBtnIcon: {
-    color: '#fff', fontSize: 18, fontWeight: '800',
-    width: 28, textAlign: 'center', marginRight: 10,
+  actionBtnIconWrap: {
+    width: 36, height: 36, borderRadius: 10,
+    backgroundColor: 'rgba(255,200,3,0.10)',
+    alignItems: 'center', justifyContent: 'center', marginRight: 12,
   },
-  actionBtnText: { color: '#fff', fontSize: 15, fontWeight: '600' },
-  actionCancel: { marginTop: 6, paddingVertical: 10 },
-  actionCancelText: { color: '#6b7280', fontSize: 14, fontWeight: '600' },
+  actionBtnText: { color: '#fff', fontSize: 15, fontWeight: '600', flex: 1 },
+  actionCancel: { marginTop: 8, paddingVertical: 12, alignItems: 'center' },
+  actionCancelText: { color: '#6b6360', fontSize: 14, fontWeight: '600' },
 
-  pickerSheet: { backgroundColor: '#fff', borderRadius: 12, marginHorizontal: 30, maxHeight: 320 },
-  pickerItem: { paddingVertical: 14, paddingHorizontal: 18, borderBottomWidth: 1, borderBottomColor: '#f0f0f0' },
-  pickerItemText: { fontSize: 15, color: '#111' },
+  pickerSheet: { backgroundColor: '#252120', borderRadius: 12, marginHorizontal: 30, maxHeight: 320, borderWidth: 1, borderColor: '#332e2b' },
+  pickerItem: { paddingVertical: 14, paddingHorizontal: 18, borderBottomWidth: 1, borderBottomColor: '#332e2b' },
+  pickerItemText: { fontSize: 15, color: '#fff' },
 
   // Client details
   clientHeader: { flexDirection: 'row', alignItems: 'center', marginBottom: 14 },
   clientAvatar: { width: 56, height: 56, borderRadius: 28, marginRight: 12 },
   clientName: { color: '#fff', fontSize: 17, fontWeight: '700' },
-  clientSub: { color: '#A0A0A0', fontSize: 13, marginTop: 2 },
+  clientSub: { color: '#a09890', fontSize: 13, marginTop: 2 },
 
   detailGrid: { marginTop: 4 },
   detailRow: {
     flexDirection: 'row', justifyContent: 'space-between',
-    paddingVertical: 8, borderBottomWidth: 1, borderBottomColor: '#2a2a2a',
+    paddingVertical: 8, borderBottomWidth: 1, borderBottomColor: '#332e2b',
   },
-  detailLabel: { color: '#A0A0A0', fontSize: 13 },
+  detailLabel: { color: '#a09890', fontSize: 13 },
   detailValue: { color: '#fff', fontSize: 13, fontWeight: '600', maxWidth: '55%', textAlign: 'right' },
 
   // Renewal banner
   banner: {
-    backgroundColor: '#F59E0B', borderRadius: 12, padding: 14,
+    backgroundColor: '#ffc803', borderRadius: 12, padding: 14,
     marginBottom: 14, alignItems: 'center',
   },
   bannerUrgent: { backgroundColor: '#EF4444' },

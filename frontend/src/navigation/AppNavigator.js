@@ -32,9 +32,9 @@ function AppTabs() {
     <Tab.Navigator
       screenOptions={({ route }) => ({
         headerShown: false,
-        tabBarActiveTintColor: '#2563eb',
-        tabBarInactiveTintColor: '#9ca3af',
-        tabBarStyle: { paddingBottom: 5, paddingTop: 5, minHeight: 60 },
+        tabBarActiveTintColor: '#ffc803',
+        tabBarInactiveTintColor: '#6b6360',
+        tabBarStyle: { backgroundColor: '#1a1716', borderTopColor: '#332e2b', paddingBottom: 5, paddingTop: 5, minHeight: 60 },
         tabBarIcon: ({ color, size }) => {
           let iconName = 'home-outline';
           if (route.name === 'Dashboard') iconName = 'home-outline';
@@ -201,8 +201,8 @@ export default function AppNavigator() {
 
   if (loading) {
     return (
-      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-        <ActivityIndicator size="large" color="#2563eb" />
+      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#1a1716' }}>
+        <ActivityIndicator size="large" color="#ffc803" />
       </View>
     );
   }

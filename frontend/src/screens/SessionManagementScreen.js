@@ -19,7 +19,6 @@ import {
   cancelDailySession,
   pauseSessions,
   fetchCustomerDashboard,
-  fetchCustomerProgramSummary,
 } from '../services/api';
 
 // Returns tomorrow's date in YYYY-MM-DD.
@@ -42,7 +41,6 @@ export default function SessionManagementScreen() {
   const [cancelDate, setCancelDate] = useState(tomorrowISO());
   const [pauseUntilDate, setPauseUntilDate] = useState('');
   const [reason, setReason] = useState('');
-  const [programId, setProgramId] = useState(null);
 
   const [submittingPostpone, setSubmittingPostpone] = useState(false);
   const [submittingCancel, setSubmittingCancel] = useState(false);
@@ -51,18 +49,10 @@ export default function SessionManagementScreen() {
   const loadData = useCallback(async () => {
     if (!token || !customerId) return;
     try {
-      const [dash, programs] = await Promise.allSettled([
-        fetchCustomerDashboard({ token, customerId }),
-        fetchCustomerProgramSummary({ customerId, token }),
-      ]);
-      if (dash.status === 'fulfilled') {
-        setPostponeLimit(dash.value.postpone_limit ?? 2);
-        setSessionsPostponed(dash.value.sessions_postponed ?? 0);
-        setSessionsCancelled(dash.value.sessions_cancelled ?? 0);
-      }
-      if (programs.status === 'fulfilled' && programs.value.programs?.length > 0) {
-        setProgramId(programs.value.programs[0].program_id || programs.value.programs[0].id || null);
-      }
+      const dash = await fetchCustomerDashboard({ token, customerId });
+      setPostponeLimit(dash.postpone_limit ?? 2);
+      setSessionsPostponed(dash.sessions_postponed ?? 0);
+      setSessionsCancelled(dash.sessions_cancelled ?? 0);
     } catch (err) {
       console.error(err);
     } finally {
@@ -126,13 +116,9 @@ export default function SessionManagementScreen() {
       Alert.alert('Missing fields', 'Please enter pause until date and reason.');
       return;
     }
-    if (!programId) {
-      Alert.alert('No program', 'No active program found to pause.');
-      return;
-    }
     setSubmittingPause(true);
     try {
-      await pauseSessions({ programId, pauseUntilDate, reason, token });
+      await pauseSessions({ pauseUntilDate, reason, token });
       Alert.alert('Requested', 'Pause request submitted.');
       setPauseUntilDate('');
       setReason('');
@@ -147,7 +133,7 @@ export default function SessionManagementScreen() {
     return (
       <SafeAreaView style={styles.safeArea} edges={['top']}>
         <View style={styles.loadingWrap}>
-          <ActivityIndicator size="large" color="#FFC107" />
+          <ActivityIndicator size="large" color="#ffc803" />
         </View>
       </SafeAreaView>
     );
@@ -157,7 +143,7 @@ export default function SessionManagementScreen() {
 
   return (
     <SafeAreaView style={styles.safeArea} edges={['top']}>
-      <StatusBar barStyle="light-content" backgroundColor="#121212" />
+      <StatusBar barStyle="light-content" backgroundColor="#1a1716" />
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         style={styles.flex}
@@ -195,7 +181,7 @@ export default function SessionManagementScreen() {
             <TextInput
               style={styles.input}
               placeholder="Session date (YYYY-MM-DD)"
-              placeholderTextColor="#A0A0A0"
+              placeholderTextColor="#6b6360"
               value={postponeDate}
               onChangeText={setPostponeDate}
             />
@@ -206,7 +192,7 @@ export default function SessionManagementScreen() {
               activeOpacity={0.8}
             >
               {submittingPostpone ? (
-                <ActivityIndicator color="#121212" />
+                <ActivityIndicator color="#1a1716" />
               ) : (
                 <Text style={styles.buttonText}>
                   {limitReached ? 'Limit Reached' : 'Postpone Session'}
@@ -224,7 +210,7 @@ export default function SessionManagementScreen() {
             <TextInput
               style={styles.input}
               placeholder="Session date (YYYY-MM-DD)"
-              placeholderTextColor="#A0A0A0"
+              placeholderTextColor="#6b6360"
               value={cancelDate}
               onChangeText={setCancelDate}
             />
@@ -248,14 +234,14 @@ export default function SessionManagementScreen() {
             <TextInput
               style={styles.input}
               placeholder="Pause until date (YYYY-MM-DD)"
-              placeholderTextColor="#A0A0A0"
+              placeholderTextColor="#6b6360"
               value={pauseUntilDate}
               onChangeText={setPauseUntilDate}
             />
             <TextInput
               style={[styles.input, styles.textArea]}
               placeholder="Reason"
-              placeholderTextColor="#A0A0A0"
+              placeholderTextColor="#6b6360"
               multiline
               numberOfLines={3}
               value={reason}
@@ -268,7 +254,7 @@ export default function SessionManagementScreen() {
               activeOpacity={0.8}
             >
               {submittingPause ? (
-                <ActivityIndicator color="#121212" />
+                <ActivityIndicator color="#1a1716" />
               ) : (
                 <Text style={styles.buttonText}>Submit Pause Request</Text>
               )}
@@ -281,44 +267,33 @@ export default function SessionManagementScreen() {
 }
 
 const styles = StyleSheet.create({
-  safeArea: { flex: 1, backgroundColor: '#121212' },
+  safeArea: { flex: 1, backgroundColor: '#1a1716' },
   flex: { flex: 1 },
   loadingWrap: { flex: 1, alignItems: 'center', justifyContent: 'center' },
   contentContainer: { paddingHorizontal: 24, paddingTop: 24 },
-  title: {
-    fontSize: 28, fontWeight: '800', color: '#FFC107',
-    marginBottom: 20, textTransform: 'uppercase', letterSpacing: 1.1,
-  },
+  title: { fontSize: 28, fontWeight: '800', color: '#ffc803', marginBottom: 20, letterSpacing: 0.3 },
   summaryCard: {
-    backgroundColor: '#1F1F1F', borderRadius: 16, padding: 16,
-    marginBottom: 20, borderWidth: 1, borderColor: '#333',
+    backgroundColor: '#252120', borderRadius: 16, padding: 16,
+    marginBottom: 20, borderWidth: 1, borderColor: '#332e2b',
   },
-  summaryRow: {
-    flexDirection: 'row', justifyContent: 'space-between',
-    alignItems: 'center', paddingVertical: 6,
-  },
-  summaryLabel: { fontSize: 14, color: '#B0B0B0' },
-  summaryValue: { fontSize: 16, color: '#FFC107', fontWeight: '700' },
+  summaryRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingVertical: 6 },
+  summaryLabel: { fontSize: 14, color: '#a09890' },
+  summaryValue: { fontSize: 16, color: '#ffc803', fontWeight: '700' },
   card: {
-    backgroundColor: '#1F1F1F', borderRadius: 20, padding: 20,
-    marginBottom: 24, borderWidth: 1, borderColor: '#333333',
+    backgroundColor: '#252120', borderRadius: 16, padding: 20,
+    marginBottom: 24, borderWidth: 1, borderColor: '#332e2b',
   },
-  sectionTitle: { fontSize: 20, fontWeight: '700', color: '#FFF', marginBottom: 6 },
-  meta: { fontSize: 13, color: '#B0B0B0', marginBottom: 14 },
+  sectionTitle: { fontSize: 18, fontWeight: '700', color: '#fff', marginBottom: 6 },
+  meta: { fontSize: 13, color: '#a09890', marginBottom: 14 },
   input: {
-    borderWidth: 1, borderColor: '#444', borderRadius: 14,
-    paddingHorizontal: 16, paddingVertical: 14, fontSize: 16,
-    backgroundColor: '#121212', color: '#FFF', marginBottom: 14,
+    borderWidth: 1, borderColor: '#332e2b', borderRadius: 12,
+    paddingHorizontal: 16, paddingVertical: 14, fontSize: 15,
+    backgroundColor: '#1f1b1a', color: '#fff', marginBottom: 14,
   },
   textArea: { height: 100, textAlignVertical: 'top' },
-  button: {
-    backgroundColor: '#FFC107', paddingVertical: 16, borderRadius: 30,
-    alignItems: 'center', marginTop: 8,
-  },
+  button: { backgroundColor: '#ffc803', paddingVertical: 16, borderRadius: 14, alignItems: 'center', marginTop: 8 },
   buttonDisabled: { opacity: 0.5 },
-  buttonText: { color: '#121212', fontSize: 18, fontWeight: '700' },
-  secondaryButton: {
-    backgroundColor: 'transparent', borderWidth: 2, borderColor: '#EF4444',
-  },
-  secondaryButtonText: { color: '#EF4444', fontWeight: '700' },
+  buttonText: { color: '#1a1716', fontSize: 16, fontWeight: '700' },
+  secondaryButton: { backgroundColor: 'transparent', borderWidth: 1.5, borderColor: '#ef4444' },
+  secondaryButtonText: { color: '#ef4444', fontWeight: '700' },
 });

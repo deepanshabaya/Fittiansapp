@@ -17,36 +17,12 @@ export default function SessionCard({ session }) {
 
 const styles = StyleSheet.create({
   card: {
-    backgroundColor: '#ffffff',
-    borderRadius: 12,
-    padding: 12,
-    marginVertical: 6,
-    shadowColor: '#000',
-    shadowOpacity: 0.04,
-    shadowRadius: 6,
-    shadowOffset: { width: 0, height: 2 },
-    elevation: 2,
+    backgroundColor: '#252120', borderRadius: 12, padding: 14, marginVertical: 6,
+    borderWidth: 1, borderColor: '#332e2b',
   },
-  row: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  date: {
-    fontSize: 14,
-    fontWeight: '500',
-    color: '#111827',
-  },
-  status: {
-    fontSize: 12,
-    color: '#2563eb',
-    fontWeight: '500',
-    textTransform: 'uppercase',
-  },
-  time: {
-    marginTop: 4,
-    fontSize: 13,
-    color: '#6b7280',
-  },
+  row: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
+  date: { fontSize: 14, fontWeight: '500', color: '#ffffff' },
+  status: { fontSize: 12, color: '#ffc803', fontWeight: '600', textTransform: 'uppercase' },
+  time: { marginTop: 4, fontSize: 13, color: '#a09890' },
 });
 

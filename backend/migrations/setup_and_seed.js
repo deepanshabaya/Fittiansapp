@@ -100,7 +100,7 @@ async function setupAndSeed() {
       CREATE TABLE pause_requests (
         id SERIAL PRIMARY KEY,
         customer_id INTEGER NOT NULL REFERENCES customers(id) ON DELETE CASCADE,
-        program_id INTEGER NOT NULL REFERENCES programs(id) ON DELETE CASCADE,
+        program_id INTEGER REFERENCES programs(id) ON DELETE SET NULL,
         pause_until_date DATE NOT NULL,
         reason TEXT NOT NULL,
         status VARCHAR(20) NOT NULL DEFAULT 'Pending' CHECK (status IN ('Pending','Approved','Rejected')),

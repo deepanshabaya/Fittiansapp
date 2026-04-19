@@ -52,7 +52,7 @@ export default function TrainerVerificationScreen() {
     // edges. The centered content uses flex layout so it auto-adapts to the
     // available space within the safe insets on any device.
     <SafeAreaView style={styles.safeArea} edges={['top', 'bottom']}>
-      <StatusBar barStyle="dark-content" backgroundColor="#f9fafb" />
+      <StatusBar barStyle="light-content" backgroundColor="#1a1716" />
       <View style={styles.container}>
         <Text style={styles.icon}>⏳</Text>
         <Text style={styles.title}>Verification Pending</Text>
@@ -82,60 +82,17 @@ export default function TrainerVerificationScreen() {
 }
 
 const styles = StyleSheet.create({
-  // FIX: safeArea with flex:1 and backgroundColor ensures the status bar area
-  // and bottom home indicator zone both show the correct background color.
-  safeArea: {
-    flex: 1,
-    backgroundColor: '#f9fafb',
-  },
-  container: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    paddingHorizontal: 24,
-  },
-  icon: {
-    fontSize: 48,
-    marginBottom: 16,
-  },
-  title: {
-    fontSize: 22,
-    fontWeight: '700',
-    color: '#111827',
-    marginBottom: 8,
-    textAlign: 'center',
-  },
-  subtitle: {
-    fontSize: 15,
-    color: '#6b7280',
-    textAlign: 'center',
-    marginBottom: 32,
-    lineHeight: 22,
-  },
+  safeArea: { flex: 1, backgroundColor: '#1a1716' },
+  container: { flex: 1, justifyContent: 'center', alignItems: 'center', paddingHorizontal: 24 },
+  icon: { fontSize: 48, marginBottom: 16 },
+  title: { fontSize: 22, fontWeight: '700', color: '#ffffff', marginBottom: 8, textAlign: 'center' },
+  subtitle: { fontSize: 15, color: '#a09890', textAlign: 'center', marginBottom: 32, lineHeight: 22 },
   button: {
-    backgroundColor: '#2563eb',
-    paddingVertical: 14,
-    paddingHorizontal: 32,
-    borderRadius: 999,
-    alignItems: 'center',
-    marginBottom: 16,
-    minWidth: 240,
+    backgroundColor: '#ffc803', paddingVertical: 16, paddingHorizontal: 32,
+    borderRadius: 14, alignItems: 'center', marginBottom: 16, minWidth: 240,
   },
-  buttonDisabled: {
-    opacity: 0.7,
-  },
-  buttonText: {
-    color: '#ffffff',
-    fontSize: 16,
-    fontWeight: '600',
-  },
-  logoutButton: {
-    paddingVertical: 12,
-    paddingHorizontal: 32,
-  },
-  logoutText: {
-    color: '#ef4444',
-    fontSize: 15,
-    fontWeight: '500',
-  },
+  buttonDisabled: { opacity: 0.7 },
+  buttonText: { color: '#1a1716', fontSize: 16, fontWeight: '700' },
+  logoutButton: { paddingVertical: 12, paddingHorizontal: 32 },
+  logoutText: { color: '#ef4444', fontSize: 15, fontWeight: '500' },
 });

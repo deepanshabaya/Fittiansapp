@@ -83,7 +83,7 @@ export default function ProfileScreen() {
 
   return (
     <SafeAreaView style={styles.safeArea} edges={['top']}>
-      <StatusBar barStyle="light-content" backgroundColor="#121212" />
+      <StatusBar barStyle="light-content" backgroundColor="#1a1716" />
       <ScrollView
         contentContainerStyle={[
           styles.contentContainer,
@@ -106,7 +106,7 @@ export default function ProfileScreen() {
           <View style={styles.card}>
             <Text style={styles.sectionTitle}>Trainer Details</Text>
             {loading ? (
-              <ActivityIndicator size="large" color="#FFC107" />
+              <ActivityIndicator size="large" color="#ffc803" />
             ) : trainerInfo ? (
               <>
                 {TRAINER_FIELDS.map((f) => (
@@ -118,7 +118,7 @@ export default function ProfileScreen() {
                         value={form[f.key]}
                         onChangeText={(v) => setForm((p) => ({ ...p, [f.key]: v }))}
                         placeholder={f.label}
-                        placeholderTextColor="#777"
+                        placeholderTextColor="#6b6360"
                       />
                     ) : (
                       <Text style={styles.value}>{trainerInfo[f.key] || 'N/A'}</Text>
@@ -138,7 +138,7 @@ export default function ProfileScreen() {
                       </TouchableOpacity>
                       <TouchableOpacity style={styles.saveBtn} onPress={handleSave} disabled={saving} activeOpacity={0.8}>
                         {saving ? (
-                          <ActivityIndicator color="#121212" />
+                          <ActivityIndicator color="#1a1716" />
                         ) : (
                           <Text style={styles.saveBtnText}>Save</Text>
                         )}
@@ -162,126 +162,31 @@ export default function ProfileScreen() {
 }
 
 const styles = StyleSheet.create({
-  safeArea: {
-    flex: 1,
-    backgroundColor: '#121212',
-  },
-  contentContainer: {
-    paddingHorizontal: 24,
-    paddingTop: 24,
-  },
-  title: {
-    fontSize: 32,
-    fontWeight: '900',
-    color: '#FFC107',
-    marginBottom: 24,
-    textTransform: 'uppercase',
-    letterSpacing: 1.2,
-  },
+  safeArea: { flex: 1, backgroundColor: '#1a1716' },
+  contentContainer: { paddingHorizontal: 24, paddingTop: 24 },
+  title: { fontSize: 28, fontWeight: '800', color: '#ffc803', marginBottom: 24, letterSpacing: 0.3 },
   card: {
-    backgroundColor: '#1F1F1F',
-    borderRadius: 20,
-    padding: 24,
-    marginBottom: 24,
-    shadowColor: '#FFC107',
-    shadowOpacity: 0.15,
-    shadowRadius: 15,
-    shadowOffset: { width: 0, height: 6 },
-    elevation: 8,
-    borderWidth: 1,
-    borderColor: '#333',
+    backgroundColor: '#252120', borderRadius: 16, padding: 24, marginBottom: 24,
+    borderWidth: 1, borderColor: '#332e2b',
   },
   sectionTitle: {
-    fontSize: 20,
-    fontWeight: '700',
-    color: '#FFC107',
-    marginBottom: 18,
-    borderBottomWidth: 1,
-    borderBottomColor: '#444',
-    paddingBottom: 8,
+    fontSize: 18, fontWeight: '700', color: '#ffc803', marginBottom: 18,
+    borderBottomWidth: 1, borderBottomColor: '#332e2b', paddingBottom: 8,
   },
-  label: {
-    fontSize: 14,
-    color: '#AFAFAF',
-    marginTop: 14,
-    textTransform: 'uppercase',
-    letterSpacing: 0.6,
-  },
-  value: {
-    fontSize: 18,
-    color: '#FFF',
-    fontWeight: '600',
-    marginTop: 6,
-  },
+  label: { fontSize: 12, color: '#a09890', marginTop: 14, textTransform: 'uppercase', letterSpacing: 0.6, fontWeight: '600' },
+  value: { fontSize: 16, color: '#fff', fontWeight: '600', marginTop: 6 },
   input: {
-    borderWidth: 1,
-    borderColor: '#444',
-    borderRadius: 10,
-    paddingHorizontal: 12,
-    paddingVertical: 10,
-    fontSize: 16,
-    color: '#FFF',
-    backgroundColor: '#2A2A2A',
-    marginTop: 6,
+    borderWidth: 1, borderColor: '#332e2b', borderRadius: 12,
+    paddingHorizontal: 14, paddingVertical: 12, fontSize: 15,
+    color: '#fff', backgroundColor: '#1f1b1a', marginTop: 6,
   },
-  btnRow: {
-    flexDirection: 'row',
-    justifyContent: 'flex-end',
-    marginTop: 20,
-    gap: 10,
-  },
-  editBtn: {
-    backgroundColor: '#FFC107',
-    paddingVertical: 12,
-    paddingHorizontal: 24,
-    borderRadius: 30,
-    alignItems: 'center',
-  },
-  editBtnText: {
-    color: '#121212',
-    fontSize: 16,
-    fontWeight: '700',
-  },
-  cancelBtn: {
-    backgroundColor: '#333',
-    paddingVertical: 12,
-    paddingHorizontal: 24,
-    borderRadius: 30,
-    alignItems: 'center',
-  },
-  cancelBtnText: {
-    color: '#FFF',
-    fontSize: 16,
-    fontWeight: '600',
-  },
-  saveBtn: {
-    backgroundColor: '#FFC107',
-    paddingVertical: 12,
-    paddingHorizontal: 24,
-    borderRadius: 30,
-    alignItems: 'center',
-    minWidth: 90,
-  },
-  saveBtnText: {
-    color: '#121212',
-    fontSize: 16,
-    fontWeight: '700',
-  },
-  button: {
-    backgroundColor: '#EF4444',
-    paddingVertical: 16,
-    borderRadius: 30,
-    alignItems: 'center',
-    marginTop: 12,
-    shadowColor: '#EF4444',
-    shadowOpacity: 0.3,
-    shadowRadius: 10,
-    shadowOffset: { width: 0, height: 3 },
-    elevation: 5,
-  },
-  buttonText: {
-    color: '#FFF',
-    fontSize: 18,
-    fontWeight: '800',
-  },
+  btnRow: { flexDirection: 'row', justifyContent: 'flex-end', marginTop: 20, gap: 10 },
+  editBtn: { backgroundColor: '#ffc803', paddingVertical: 12, paddingHorizontal: 24, borderRadius: 14, alignItems: 'center' },
+  editBtnText: { color: '#1a1716', fontSize: 16, fontWeight: '700' },
+  cancelBtn: { backgroundColor: '#252120', paddingVertical: 12, paddingHorizontal: 24, borderRadius: 14, alignItems: 'center', borderWidth: 1, borderColor: '#332e2b' },
+  cancelBtnText: { color: '#fff', fontSize: 16, fontWeight: '600' },
+  saveBtn: { backgroundColor: '#ffc803', paddingVertical: 12, paddingHorizontal: 24, borderRadius: 14, alignItems: 'center', minWidth: 90 },
+  saveBtnText: { color: '#1a1716', fontSize: 16, fontWeight: '700' },
+  button: { backgroundColor: '#ef4444', paddingVertical: 16, borderRadius: 14, alignItems: 'center', marginTop: 12 },
+  buttonText: { color: '#fff', fontSize: 18, fontWeight: '700' },
 });

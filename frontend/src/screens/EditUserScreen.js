@@ -121,14 +121,14 @@ function UserRow({ user, role, onPress }) {
         <Image source={{ uri: photo }} style={s.userAvatar} />
       ) : (
         <View style={[s.userAvatar, s.avatarPlaceholder]}>
-          <Ionicons name={role === 'customer' ? 'person' : 'barbell'} size={20} color="#94a3b8" />
+          <Ionicons name={role === 'customer' ? 'person' : 'barbell'} size={20} color="#6b6360" />
         </View>
       )}
       <View style={s.userInfo}>
         <Text style={s.userName}>{user.name}</Text>
         {sub ? <Text style={s.userSub}>{sub}</Text> : null}
       </View>
-      <Ionicons name="chevron-forward" size={18} color="#94a3b8" />
+      <Ionicons name="chevron-forward" size={18} color="#6b6360" />
     </TouchableOpacity>
   );
 }
@@ -309,35 +309,35 @@ export default function EditUserScreen({ navigation }) {
   if (step === 'pick_role') {
     return (
       <SafeAreaView style={s.safeArea} edges={['top', 'bottom']}>
-        <StatusBar barStyle="dark-content" backgroundColor="#f8fafc" />
+        <StatusBar barStyle="light-content" backgroundColor="#1a1716" />
         <View style={s.container}>
           <TouchableOpacity style={s.backBtn} onPress={() => navigation.goBack()}>
-            <Ionicons name="arrow-back" size={22} color="#1e293b" />
+            <Ionicons name="arrow-back" size={22} color="#fff" />
           </TouchableOpacity>
 
           <Text style={s.title}>Edit User</Text>
           <Text style={s.subtitle}>Select the type of user to edit</Text>
 
           <TouchableOpacity style={s.roleCard} onPress={() => goToPickUser('customer')}>
-            <View style={[s.roleIcon, { backgroundColor: '#dcfce7' }]}>
-              <Ionicons name="person" size={30} color="#16a34a" />
+            <View style={[s.roleIcon, { backgroundColor: 'rgba(255,200,3,0.10)' }]}>
+              <Ionicons name="person" size={30} color="#22c55e" />
             </View>
             <View style={s.roleInfo}>
               <Text style={s.roleCardTitle}>Customer</Text>
               <Text style={s.roleCardDesc}>Edit customer details</Text>
             </View>
-            <Ionicons name="chevron-forward" size={20} color="#9ca3af" />
+            <Ionicons name="chevron-forward" size={20} color="#6b6360" />
           </TouchableOpacity>
 
           <TouchableOpacity style={s.roleCard} onPress={() => goToPickUser('trainer')}>
-            <View style={[s.roleIcon, { backgroundColor: '#ede9fe' }]}>
-              <Ionicons name="barbell" size={30} color="#7c3aed" />
+            <View style={[s.roleIcon, { backgroundColor: 'rgba(255,200,3,0.10)' }]}>
+              <Ionicons name="barbell" size={30} color="#ffc803" />
             </View>
             <View style={s.roleInfo}>
               <Text style={s.roleCardTitle}>Trainer</Text>
               <Text style={s.roleCardDesc}>Edit trainer details</Text>
             </View>
-            <Ionicons name="chevron-forward" size={20} color="#9ca3af" />
+            <Ionicons name="chevron-forward" size={20} color="#6b6360" />
           </TouchableOpacity>
         </View>
       </SafeAreaView>
@@ -352,11 +352,11 @@ export default function EditUserScreen({ navigation }) {
 
     return (
       <SafeAreaView style={s.safeArea} edges={['top', 'bottom']}>
-        <StatusBar barStyle="dark-content" backgroundColor="#f8fafc" />
+        <StatusBar barStyle="light-content" backgroundColor="#1a1716" />
 
         <View style={s.header}>
           <TouchableOpacity onPress={() => setStep('pick_role')} style={s.backBtn}>
-            <Ionicons name="arrow-back" size={22} color="#1e293b" />
+            <Ionicons name="arrow-back" size={22} color="#fff" />
           </TouchableOpacity>
           <Text style={s.headerTitle}>
             Select {selectedRole === 'customer' ? 'Customer' : 'Trainer'}
@@ -366,7 +366,7 @@ export default function EditUserScreen({ navigation }) {
 
         {listLoading ? (
           <View style={s.centered}>
-            <ActivityIndicator size="large" color="#2563eb" />
+            <ActivityIndicator size="large" color="#ffc803" />
           </View>
         ) : (
           <FlatList
@@ -399,8 +399,8 @@ export default function EditUserScreen({ navigation }) {
     return (
       <SafeAreaView style={s.safeArea} edges={['top', 'bottom']}>
         <View style={s.centered}>
-          <ActivityIndicator size="large" color="#2563eb" />
-          <Text style={{ color: '#64748b', marginTop: 12 }}>Loading details...</Text>
+          <ActivityIndicator size="large" color="#ffc803" />
+          <Text style={{ color: '#a09890', marginTop: 12 }}>Loading details...</Text>
         </View>
       </SafeAreaView>
     );
@@ -408,14 +408,14 @@ export default function EditUserScreen({ navigation }) {
 
   return (
     <SafeAreaView style={s.safeArea} edges={['top', 'bottom']}>
-      <StatusBar barStyle="dark-content" backgroundColor="#f8fafc" />
+      <StatusBar barStyle="light-content" backgroundColor="#1a1716" />
       <KeyboardAvoidingView
         style={{ flex: 1 }}
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
       >
         <View style={s.header}>
           <TouchableOpacity onPress={() => setStep('pick_user')} style={s.backBtn}>
-            <Ionicons name="arrow-back" size={22} color="#1e293b" />
+            <Ionicons name="arrow-back" size={22} color="#fff" />
           </TouchableOpacity>
           <Text style={s.headerTitle}>
             Edit {selectedUser?.name}
@@ -434,7 +434,7 @@ export default function EditUserScreen({ navigation }) {
               <Image source={{ uri: displayPhoto }} style={s.imagePreview} />
             ) : (
               <View style={s.imagePlaceholder}>
-                <Ionicons name="camera-outline" size={32} color="#94a3b8" />
+                <Ionicons name="camera-outline" size={32} color="#6b6360" />
                 <Text style={s.imagePickerText}>Change Photo</Text>
               </View>
             )}
@@ -453,7 +453,7 @@ export default function EditUserScreen({ navigation }) {
                   <Text style={[s.pickerTriggerText, !formValues[field.key] && s.pickerPlaceholder]}>
                     {getPickerLabel(field)}
                   </Text>
-                  <Ionicons name="chevron-down" size={18} color="#94a3b8" />
+                  <Ionicons name="chevron-down" size={18} color="#6b6360" />
                 </TouchableOpacity>
               ) : (
                 <TextInput
@@ -493,7 +493,7 @@ export default function EditUserScreen({ navigation }) {
                         <Text style={[s.modalOptionText, selected && s.modalOptionTextSelected]}>
                           {item.label}
                         </Text>
-                        {selected && <Ionicons name="checkmark" size={18} color="#2563eb" />}
+                        {selected && <Ionicons name="checkmark" size={18} color="#ffc803" />}
                       </TouchableOpacity>
                     );
                   }}
@@ -527,104 +527,85 @@ export default function EditUserScreen({ navigation }) {
 
 // ────────────────────────────────────────────────────────
 const s = StyleSheet.create({
-  safeArea: { flex: 1, backgroundColor: '#f8fafc' },
+  safeArea: { flex: 1, backgroundColor: '#1a1716' },
   container: { flex: 1, paddingHorizontal: 24, paddingTop: 16 },
   centered: { flex: 1, alignItems: 'center', justifyContent: 'center', paddingVertical: 48 },
 
-  backBtn: {
-    width: 38, height: 38, borderRadius: 12,
-    backgroundColor: '#e2e8f0', alignItems: 'center', justifyContent: 'center',
-  },
-  title: { fontSize: 26, fontWeight: '700', color: '#0f172a', marginTop: 24 },
-  subtitle: { fontSize: 14, color: '#64748b', marginTop: 4, marginBottom: 28 },
+  backBtn: { width: 38, height: 38, borderRadius: 12, backgroundColor: '#252120', alignItems: 'center', justifyContent: 'center' },
+  title: { fontSize: 26, fontWeight: '800', color: '#ffc803', marginTop: 24 },
+  subtitle: { fontSize: 14, color: '#a09890', marginTop: 4, marginBottom: 28 },
 
-  // ── Role cards ──
   roleCard: {
-    flexDirection: 'row', alignItems: 'center', backgroundColor: '#fff',
-    padding: 18, borderRadius: 16, marginBottom: 14,
-    borderWidth: 2, borderColor: '#e2e8f0',
-    shadowColor: '#000', shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.04, shadowRadius: 4, elevation: 2,
+    flexDirection: 'row', alignItems: 'center', backgroundColor: '#252120',
+    padding: 18, borderRadius: 16, marginBottom: 14, borderWidth: 2, borderColor: '#332e2b',
   },
-  roleIcon: { width: 56, height: 56, borderRadius: 16, alignItems: 'center', justifyContent: 'center' },
+  roleIcon: { width: 56, height: 56, borderRadius: 16, alignItems: 'center', justifyContent: 'center', backgroundColor: 'rgba(255,200,3,0.10)' },
   roleInfo: { flex: 1, marginLeft: 14 },
-  roleCardTitle: { fontSize: 17, fontWeight: '600', color: '#1e293b' },
-  roleCardDesc: { fontSize: 12, color: '#64748b', marginTop: 2 },
+  roleCardTitle: { fontSize: 17, fontWeight: '600', color: '#fff' },
+  roleCardDesc: { fontSize: 12, color: '#a09890', marginTop: 2 },
 
-  // ── Header ──
   header: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
-    paddingHorizontal: 20, paddingVertical: 14,
-    borderBottomWidth: 1, borderBottomColor: '#e2e8f0',
+    paddingHorizontal: 20, paddingVertical: 14, borderBottomWidth: 1, borderBottomColor: '#332e2b',
   },
-  headerTitle: { fontSize: 18, fontWeight: '600', color: '#0f172a' },
+  headerTitle: { fontSize: 18, fontWeight: '600', color: '#fff' },
 
-  // ── User list rows ──
   userRow: {
-    flexDirection: 'row', alignItems: 'center', backgroundColor: '#fff',
-    padding: 14, borderRadius: 14, marginBottom: 10,
-    shadowColor: '#000', shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.03, shadowRadius: 3, elevation: 1,
+    flexDirection: 'row', alignItems: 'center', backgroundColor: '#252120',
+    padding: 14, borderRadius: 14, marginBottom: 10, borderWidth: 1, borderColor: '#332e2b',
   },
   userAvatar: { width: 44, height: 44, borderRadius: 22 },
-  avatarPlaceholder: { backgroundColor: '#e2e8f0', alignItems: 'center', justifyContent: 'center' },
+  avatarPlaceholder: { backgroundColor: '#1f1b1a', alignItems: 'center', justifyContent: 'center' },
   userInfo: { flex: 1, marginLeft: 12 },
-  userName: { fontSize: 15, fontWeight: '600', color: '#1e293b' },
-  userSub: { fontSize: 13, color: '#64748b', marginTop: 2 },
-  emptyText: { fontSize: 14, color: '#94a3b8', marginTop: 8 },
+  userName: { fontSize: 15, fontWeight: '600', color: '#fff' },
+  userSub: { fontSize: 13, color: '#a09890', marginTop: 2 },
+  emptyText: { fontSize: 14, color: '#6b6360', marginTop: 8 },
 
-  // ── Image picker ──
   imagePicker: { alignSelf: 'center', marginBottom: 24 },
   imagePlaceholder: {
-    width: 110, height: 110, borderRadius: 55, backgroundColor: '#e2e8f0',
-    alignItems: 'center', justifyContent: 'center',
-    borderWidth: 2, borderColor: '#cbd5e1', borderStyle: 'dashed',
+    width: 110, height: 110, borderRadius: 55, backgroundColor: '#252120',
+    alignItems: 'center', justifyContent: 'center', borderWidth: 2, borderColor: '#332e2b', borderStyle: 'dashed',
   },
-  imagePreview: { width: 110, height: 110, borderRadius: 55, borderWidth: 3, borderColor: '#2563eb' },
-  imagePickerText: { fontSize: 11, color: '#94a3b8', marginTop: 4 },
+  imagePreview: { width: 110, height: 110, borderRadius: 55, borderWidth: 3, borderColor: '#ffc803' },
+  imagePickerText: { fontSize: 11, color: '#6b6360', marginTop: 4 },
 
-  // ── Fields ──
   fieldGroup: { marginBottom: 16 },
-  label: { fontSize: 13, fontWeight: '500', color: '#334155', marginBottom: 6 },
+  label: { fontSize: 13, fontWeight: '600', color: '#a09890', marginBottom: 6, letterSpacing: 0.3, textTransform: 'uppercase' },
   input: {
-    borderWidth: 1, borderColor: '#e2e8f0', borderRadius: 12,
-    paddingHorizontal: 14, paddingVertical: 11,
-    fontSize: 15, backgroundColor: '#fff', color: '#0f172a',
+    borderWidth: 1, borderColor: '#332e2b', borderRadius: 12,
+    paddingHorizontal: 14, paddingVertical: 12, fontSize: 15,
+    backgroundColor: '#1f1b1a', color: '#fff',
   },
 
-  // ── Picker ──
   pickerTrigger: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
-    borderWidth: 1, borderColor: '#e2e8f0', borderRadius: 12,
-    paddingHorizontal: 14, paddingVertical: 12, backgroundColor: '#fff',
+    borderWidth: 1, borderColor: '#332e2b', borderRadius: 12,
+    paddingHorizontal: 14, paddingVertical: 12, backgroundColor: '#1f1b1a',
   },
-  pickerTriggerText: { fontSize: 15, color: '#0f172a' },
-  pickerPlaceholder: { color: '#94a3b8' },
+  pickerTriggerText: { fontSize: 15, color: '#fff' },
+  pickerPlaceholder: { color: '#6b6360' },
 
-  // ── Modal ──
-  modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.4)', justifyContent: 'flex-end' },
+  modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'flex-end' },
   modalSheet: {
-    backgroundColor: '#fff', borderTopLeftRadius: 20, borderTopRightRadius: 20,
+    backgroundColor: '#252120', borderTopLeftRadius: 20, borderTopRightRadius: 20,
     paddingTop: 16, paddingBottom: 32, maxHeight: '60%',
   },
   modalTitle: {
-    fontSize: 16, fontWeight: '600', color: '#0f172a', textAlign: 'center',
-    paddingHorizontal: 20, paddingBottom: 12,
-    borderBottomWidth: 1, borderBottomColor: '#e2e8f0', marginBottom: 4,
+    fontSize: 16, fontWeight: '600', color: '#fff', textAlign: 'center',
+    paddingHorizontal: 20, paddingBottom: 12, borderBottomWidth: 1, borderBottomColor: '#332e2b', marginBottom: 4,
   },
   modalOption: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
     paddingVertical: 14, paddingHorizontal: 20,
   },
-  modalOptionSelected: { backgroundColor: '#eff6ff' },
-  modalOptionText: { fontSize: 15, color: '#1e293b' },
-  modalOptionTextSelected: { color: '#2563eb', fontWeight: '600' },
+  modalOptionSelected: { backgroundColor: 'rgba(255,200,3,0.08)' },
+  modalOptionText: { fontSize: 15, color: '#fff' },
+  modalOptionTextSelected: { color: '#ffc803', fontWeight: '600' },
 
-  // ── Primary button ──
   primaryBtn: {
-    flexDirection: 'row', backgroundColor: '#2563eb', paddingVertical: 15,
+    flexDirection: 'row', backgroundColor: '#ffc803', paddingVertical: 16,
     borderRadius: 14, alignItems: 'center', justifyContent: 'center', marginTop: 16,
   },
   primaryBtnDisabled: { opacity: 0.5 },
-  primaryBtnText: { color: '#fff', fontSize: 16, fontWeight: '600' },
+  primaryBtnText: { color: '#1a1716', fontSize: 16, fontWeight: '700' },
 });

@@ -56,7 +56,7 @@ export default function AttendanceScreen() {
     // The bottom tab navigator renders its own bottom safe area padding, so
     // applying 'bottom' here would double-stack it, creating a large gap.
     <SafeAreaView style={styles.safeArea} edges={['top']}>
-      <StatusBar barStyle="dark-content" backgroundColor="#f3f4f6" />
+      <StatusBar barStyle="light-content" backgroundColor="#1a1716" />
       <ScrollView
         style={styles.container}
         contentContainerStyle={[
@@ -92,54 +92,15 @@ export default function AttendanceScreen() {
 }
 
 const styles = StyleSheet.create({
-  safeArea: {
-    flex: 1,
-    backgroundColor: '#f3f4f6',
-    // FIX: Removed Platform.OS === 'android' ? StatusBar.currentHeight : 0
-    // react-native-safe-area-context handles the status bar offset automatically
-    // for both platforms without any manual Platform checks.
-  },
-  container: {
-    flex: 1,
-    backgroundColor: '#f3f4f6',
-  },
-  content: {
-    paddingHorizontal: 20,
-    paddingTop: 24,
-    // paddingBottom applied dynamically above via insets
-  },
-  title: {
-    fontSize: 24,
-    fontWeight: '700',
-    color: '#111827',
-    marginBottom: 16,
-  },
+  safeArea: { flex: 1, backgroundColor: '#1a1716' },
+  container: { flex: 1, backgroundColor: '#1a1716' },
+  content: { paddingHorizontal: 20, paddingTop: 24 },
+  title: { fontSize: 24, fontWeight: '800', color: '#ffc803', marginBottom: 16, letterSpacing: 0.3 },
   summaryCard: {
-    backgroundColor: '#2563eb',
-    borderRadius: 16,
-    padding: 16,
-    marginBottom: 16,
-    shadowColor: '#000',
-    shadowOpacity: 0.2,
-    shadowRadius: 6,
-    shadowOffset: { width: 0, height: 3 },
-    elevation: 4,
+    backgroundColor: '#252120', borderRadius: 16, padding: 16, marginBottom: 16,
+    borderWidth: 1, borderColor: '#332e2b',
   },
-  summaryText: {
-    fontSize: 16,
-    fontWeight: '700',
-    color: '#fff',
-  },
-  sectionTitle: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#111827',
-    marginBottom: 8,
-    marginTop: 4,
-  },
-  empty: {
-    fontSize: 14,
-    color: '#6b7280',
-    marginTop: 8,
-  },
+  summaryText: { fontSize: 16, fontWeight: '700', color: '#ffc803' },
+  sectionTitle: { fontSize: 16, fontWeight: '600', color: '#ffffff', marginBottom: 8, marginTop: 4 },
+  empty: { fontSize: 14, color: '#6b6360', marginTop: 8 },
 });

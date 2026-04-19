@@ -221,14 +221,14 @@ export default function CreateUserScreen({ navigation }) {
   if (step === 'role') {
     return (
       <SafeAreaView style={styles.safeArea} edges={['top', 'bottom']}>
-        <StatusBar barStyle="dark-content" backgroundColor="#f8fafc" />
+        <StatusBar barStyle="light-content" backgroundColor="#1a1716" />
         <View style={styles.roleContainer}>
           {/* Back button */}
           <TouchableOpacity
             style={styles.backBtn}
             onPress={() => navigation.goBack()}
           >
-            <Ionicons name="arrow-back" size={22} color="#1e293b" />
+            <Ionicons name="arrow-back" size={22} color="#fff" />
           </TouchableOpacity>
 
           <Text style={styles.roleTitle}>Create New User</Text>
@@ -241,8 +241,8 @@ export default function CreateUserScreen({ navigation }) {
             style={[styles.roleCard, selectedRole === 'trainer' && styles.roleCardActive]}
             onPress={() => setSelectedRole('trainer')}
           >
-            <View style={[styles.roleIcon, { backgroundColor: '#ede9fe' }]}>
-              <Ionicons name="barbell" size={30} color="#7c3aed" />
+            <View style={[styles.roleIcon, { backgroundColor: 'rgba(255,200,3,0.10)' }]}>
+              <Ionicons name="barbell" size={30} color="#ffc803" />
             </View>
             <View style={styles.roleInfo}>
               <Text style={styles.roleCardTitle}>Trainer</Text>
@@ -251,7 +251,7 @@ export default function CreateUserScreen({ navigation }) {
               </Text>
             </View>
             {selectedRole === 'trainer' && (
-              <Ionicons name="checkmark-circle" size={24} color="#2563eb" />
+              <Ionicons name="checkmark-circle" size={24} color="#ffc803" />
             )}
           </TouchableOpacity>
 
@@ -260,8 +260,8 @@ export default function CreateUserScreen({ navigation }) {
             style={[styles.roleCard, selectedRole === 'customer' && styles.roleCardActive]}
             onPress={() => setSelectedRole('customer')}
           >
-            <View style={[styles.roleIcon, { backgroundColor: '#dcfce7' }]}>
-              <Ionicons name="person" size={30} color="#16a34a" />
+            <View style={[styles.roleIcon, { backgroundColor: 'rgba(255,200,3,0.10)' }]}>
+              <Ionicons name="person" size={30} color="#22c55e" />
             </View>
             <View style={styles.roleInfo}>
               <Text style={styles.roleCardTitle}>Customer</Text>
@@ -270,7 +270,7 @@ export default function CreateUserScreen({ navigation }) {
               </Text>
             </View>
             {selectedRole === 'customer' && (
-              <Ionicons name="checkmark-circle" size={24} color="#2563eb" />
+              <Ionicons name="checkmark-circle" size={24} color="#ffc803" />
             )}
           </TouchableOpacity>
 
@@ -297,7 +297,7 @@ export default function CreateUserScreen({ navigation }) {
 
   return (
     <SafeAreaView style={styles.safeArea} edges={['top', 'bottom']}>
-      <StatusBar barStyle="dark-content" backgroundColor="#f8fafc" />
+      <StatusBar barStyle="light-content" backgroundColor="#1a1716" />
       <KeyboardAvoidingView
         style={styles.flex}
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
@@ -305,7 +305,7 @@ export default function CreateUserScreen({ navigation }) {
         {/* Form header */}
         <View style={styles.formHeader}>
           <TouchableOpacity onPress={() => setStep('role')} style={styles.backBtn}>
-            <Ionicons name="arrow-back" size={22} color="#1e293b" />
+            <Ionicons name="arrow-back" size={22} color="#fff" />
           </TouchableOpacity>
           <Text style={styles.formHeaderTitle}>
             New {selectedRole === 'trainer' ? 'Trainer' : 'Customer'}
@@ -324,7 +324,7 @@ export default function CreateUserScreen({ navigation }) {
               <Image source={{ uri: imageUri }} style={styles.imagePreview} />
             ) : (
               <View style={styles.imagePlaceholder}>
-                <Ionicons name="camera-outline" size={32} color="#94a3b8" />
+                <Ionicons name="camera-outline" size={32} color="#6b6360" />
                 <Text style={styles.imagePickerText}>
                   {selectedRole === 'customer' ? 'Upload Photo' : 'Profile Image'}
                 </Text>
@@ -345,7 +345,7 @@ export default function CreateUserScreen({ navigation }) {
                   <Text style={[styles.pickerTriggerText, !formValues[field.key] && styles.pickerPlaceholder]}>
                     {getPickerLabel(field)}
                   </Text>
-                  <Ionicons name="chevron-down" size={18} color="#94a3b8" />
+                  <Ionicons name="chevron-down" size={18} color="#6b6360" />
                 </TouchableOpacity>
               ) : (
                 <TextInput
@@ -387,7 +387,7 @@ export default function CreateUserScreen({ navigation }) {
                         <Text style={[styles.modalOptionText, selected && styles.modalOptionTextSelected]}>
                           {item.label}
                         </Text>
-                        {selected && <Ionicons name="checkmark" size={18} color="#2563eb" />}
+                        {selected && <Ionicons name="checkmark" size={18} color="#ffc803" />}
                       </TouchableOpacity>
                     );
                   }}
@@ -422,233 +422,75 @@ export default function CreateUserScreen({ navigation }) {
 
 // ────────────────────────────────────────────────────────
 const styles = StyleSheet.create({
-  safeArea: {
-    flex: 1,
-    backgroundColor: '#f8fafc',
-  },
-  flex: {
-    flex: 1,
-  },
+  safeArea: { flex: 1, backgroundColor: '#1a1716' },
+  flex: { flex: 1 },
+  backBtn: { width: 38, height: 38, borderRadius: 12, backgroundColor: '#252120', alignItems: 'center', justifyContent: 'center' },
 
-  // ── Back button ──
-  backBtn: {
-    width: 38,
-    height: 38,
-    borderRadius: 12,
-    backgroundColor: '#e2e8f0',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-
-  // ── Role selection step ──
-  roleContainer: {
-    flex: 1,
-    paddingHorizontal: 24,
-    paddingTop: 16,
-  },
-  roleTitle: {
-    fontSize: 26,
-    fontWeight: '700',
-    color: '#0f172a',
-    marginTop: 24,
-  },
-  roleSubtitle: {
-    fontSize: 14,
-    color: '#64748b',
-    marginTop: 4,
-    marginBottom: 28,
-  },
+  roleContainer: { flex: 1, paddingHorizontal: 24, paddingTop: 16 },
+  roleTitle: { fontSize: 26, fontWeight: '800', color: '#ffc803', marginTop: 24 },
+  roleSubtitle: { fontSize: 14, color: '#a09890', marginTop: 4, marginBottom: 28 },
   roleCard: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#fff',
-    padding: 18,
-    borderRadius: 16,
-    marginBottom: 14,
-    borderWidth: 2,
-    borderColor: '#e2e8f0',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.04,
-    shadowRadius: 4,
-    elevation: 2,
+    flexDirection: 'row', alignItems: 'center', backgroundColor: '#252120',
+    padding: 18, borderRadius: 16, marginBottom: 14, borderWidth: 2, borderColor: '#332e2b',
   },
-  roleCardActive: {
-    borderColor: '#2563eb',
-    backgroundColor: '#eff6ff',
-  },
-  roleIcon: {
-    width: 56,
-    height: 56,
-    borderRadius: 16,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  roleInfo: {
-    flex: 1,
-    marginLeft: 14,
-  },
-  roleCardTitle: {
-    fontSize: 17,
-    fontWeight: '600',
-    color: '#1e293b',
-  },
-  roleCardDesc: {
-    fontSize: 12,
-    color: '#64748b',
-    marginTop: 2,
-  },
+  roleCardActive: { borderColor: '#ffc803', backgroundColor: 'rgba(255,200,3,0.08)' },
+  roleIcon: { width: 56, height: 56, borderRadius: 16, alignItems: 'center', justifyContent: 'center', backgroundColor: 'rgba(255,200,3,0.10)' },
+  roleInfo: { flex: 1, marginLeft: 14 },
+  roleCardTitle: { fontSize: 17, fontWeight: '600', color: '#fff' },
+  roleCardDesc: { fontSize: 12, color: '#a09890', marginTop: 2 },
 
-  // ── Form step ──
   formHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 20,
-    paddingVertical: 14,
-    borderBottomWidth: 1,
-    borderBottomColor: '#e2e8f0',
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
+    paddingHorizontal: 20, paddingVertical: 14, borderBottomWidth: 1, borderBottomColor: '#332e2b',
   },
-  formHeaderTitle: {
-    fontSize: 18,
-    fontWeight: '600',
-    color: '#0f172a',
-  },
-  formScrollContent: {
-    paddingHorizontal: 20,
-    paddingTop: 20,
-  },
+  formHeaderTitle: { fontSize: 18, fontWeight: '600', color: '#fff' },
+  formScrollContent: { paddingHorizontal: 20, paddingTop: 20 },
 
-  // ── Image picker ──
-  imagePicker: {
-    alignSelf: 'center',
-    marginBottom: 24,
-  },
+  imagePicker: { alignSelf: 'center', marginBottom: 24 },
   imagePlaceholder: {
-    width: 110,
-    height: 110,
-    borderRadius: 55,
-    backgroundColor: '#e2e8f0',
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderWidth: 2,
-    borderColor: '#cbd5e1',
-    borderStyle: 'dashed',
+    width: 110, height: 110, borderRadius: 55, backgroundColor: '#252120',
+    alignItems: 'center', justifyContent: 'center', borderWidth: 2, borderColor: '#332e2b', borderStyle: 'dashed',
   },
-  imagePreview: {
-    width: 110,
-    height: 110,
-    borderRadius: 55,
-    borderWidth: 3,
-    borderColor: '#2563eb',
-  },
-  imagePickerText: {
-    fontSize: 11,
-    color: '#94a3b8',
-    marginTop: 4,
-  },
+  imagePreview: { width: 110, height: 110, borderRadius: 55, borderWidth: 3, borderColor: '#ffc803' },
+  imagePickerText: { fontSize: 11, color: '#6b6360', marginTop: 4 },
 
-  // ── Fields ──
-  fieldGroup: {
-    marginBottom: 16,
-  },
-  label: {
-    fontSize: 13,
-    fontWeight: '500',
-    color: '#334155',
-    marginBottom: 6,
-  },
+  fieldGroup: { marginBottom: 16 },
+  label: { fontSize: 13, fontWeight: '600', color: '#a09890', marginBottom: 6, letterSpacing: 0.3, textTransform: 'uppercase' },
   input: {
-    borderWidth: 1,
-    borderColor: '#e2e8f0',
-    borderRadius: 12,
-    paddingHorizontal: 14,
-    paddingVertical: 11,
-    fontSize: 15,
-    backgroundColor: '#fff',
-    color: '#0f172a',
+    borderWidth: 1, borderColor: '#332e2b', borderRadius: 12,
+    paddingHorizontal: 14, paddingVertical: 12, fontSize: 15,
+    backgroundColor: '#1f1b1a', color: '#fff',
   },
 
-  // ── Picker trigger ──
   pickerTrigger: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    borderWidth: 1,
-    borderColor: '#e2e8f0',
-    borderRadius: 12,
-    paddingHorizontal: 14,
-    paddingVertical: 12,
-    backgroundColor: '#fff',
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
+    borderWidth: 1, borderColor: '#332e2b', borderRadius: 12,
+    paddingHorizontal: 14, paddingVertical: 12, backgroundColor: '#1f1b1a',
   },
-  pickerTriggerText: {
-    fontSize: 15,
-    color: '#0f172a',
-  },
-  pickerPlaceholder: {
-    color: '#94a3b8',
-  },
+  pickerTriggerText: { fontSize: 15, color: '#fff' },
+  pickerPlaceholder: { color: '#6b6360' },
 
-  // ── Picker modal ──
-  modalOverlay: {
-    flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.4)',
-    justifyContent: 'flex-end',
-  },
+  modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'flex-end' },
   modalSheet: {
-    backgroundColor: '#fff',
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
-    paddingTop: 16,
-    paddingBottom: 32,
-    maxHeight: '60%',
+    backgroundColor: '#252120', borderTopLeftRadius: 20, borderTopRightRadius: 20,
+    paddingTop: 16, paddingBottom: 32, maxHeight: '60%',
   },
   modalTitle: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#0f172a',
-    textAlign: 'center',
-    paddingHorizontal: 20,
-    paddingBottom: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: '#e2e8f0',
-    marginBottom: 4,
+    fontSize: 16, fontWeight: '600', color: '#fff', textAlign: 'center',
+    paddingHorizontal: 20, paddingBottom: 12, borderBottomWidth: 1, borderBottomColor: '#332e2b', marginBottom: 4,
   },
   modalOption: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingVertical: 14,
-    paddingHorizontal: 20,
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
+    paddingVertical: 14, paddingHorizontal: 20,
   },
-  modalOptionSelected: {
-    backgroundColor: '#eff6ff',
-  },
-  modalOptionText: {
-    fontSize: 15,
-    color: '#1e293b',
-  },
-  modalOptionTextSelected: {
-    color: '#2563eb',
-    fontWeight: '600',
-  },
+  modalOptionSelected: { backgroundColor: 'rgba(255,200,3,0.08)' },
+  modalOptionText: { fontSize: 15, color: '#fff' },
+  modalOptionTextSelected: { color: '#ffc803', fontWeight: '600' },
 
-  // ── Primary button ──
   primaryBtn: {
-    flexDirection: 'row',
-    backgroundColor: '#2563eb',
-    paddingVertical: 15,
-    borderRadius: 14,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginTop: 16,
+    flexDirection: 'row', backgroundColor: '#ffc803', paddingVertical: 16,
+    borderRadius: 14, alignItems: 'center', justifyContent: 'center', marginTop: 16,
   },
-  primaryBtnDisabled: {
-    opacity: 0.5,
-  },
-  primaryBtnText: {
-    color: '#fff',
-    fontSize: 16,
-    fontWeight: '600',
-  },
+  primaryBtnDisabled: { opacity: 0.5 },
+  primaryBtnText: { color: '#1a1716', fontSize: 16, fontWeight: '700' },
 });

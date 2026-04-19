@@ -3,7 +3,9 @@
     "allow": [
       "Bash(find /d/fittiansapp/backend/routes -type f -name *.js)",
       "Bash(node -e ':*)",
-      "Bash(node migrations/add_session_action_type.js)"
+      "Bash(node migrations/add_session_action_type.js)",
+      "Bash(adb devices *)",
+      "Bash(\"C:/Program Files/Java/jdk-17/bin/java.exe\" -version)"
     ]
   }
 }
