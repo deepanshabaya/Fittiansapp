@@ -21,8 +21,14 @@ const userAgreementRoutes = require('./routes/userAgreementRoutes');
 
 const app = express();
 
-app.use(cors());
-app.use(express.json());
+// Railway (and most PaaS) sits behind a reverse proxy. This makes
+// req.ip / secure / protocol reflect the original client, not the proxy.
+app.set('trust proxy', 1);
+
+// CORS — permissive by default (Expo Go / React Native fetch doesn't enforce
+// CORS, but Expo web does, and so do any browser-based admin tools).
+app.use(cors({ origin: true, credentials: true }));
+app.use(express.json({ limit: '1mb' }));
 
 // Serve uploaded files (images) as static assets
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
@@ -63,8 +69,11 @@ app.use('/api/user-agreements', userAgreementRoutes);
 
 app.use(errorHandler);
 
-const PORT = process.env.PORT || 4000;
+// Railway injects PORT at runtime — must use it, and must bind to 0.0.0.0
+// (the container's external interface), not localhost.
+const PORT = Number(process.env.PORT) || 3000;
+const HOST = '0.0.0.0';
 
-app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
+app.listen(PORT, HOST, () => {
+  console.log(`Server running on ${HOST}:${PORT} (${process.env.NODE_ENV || 'development'})`);
 });

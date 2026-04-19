@@ -5,11 +5,15 @@ dotenv.config();
 
 let pool;
 
-// Railway / cloud: use DATABASE_URL when available
+// Railway / cloud: use DATABASE_URL when available.
+// Railway's managed Postgres requires SSL on the public URL, so default SSL
+// ON whenever DATABASE_URL is set. Override with DB_SSL=false for the rare
+// case (e.g. local docker, Railway internal network without TLS).
 if (process.env.DATABASE_URL) {
+  const sslDisabled = process.env.DB_SSL === 'false';
   pool = new Pool({
     connectionString: process.env.DATABASE_URL,
-    ssl: process.env.DB_SSL === 'true' ? { rejectUnauthorized: false } : undefined,
+    ssl: sslDisabled ? false : { rejectUnauthorized: false },
   });
 } else {
   // Local development using discrete env vars
@@ -28,8 +32,10 @@ pool
   .catch((err) => console.error('DB connection error', err));
 
 pool.on('error', (err) => {
+  // Log and let Railway's health check / supervisor restart the process.
+  // Don't hard-exit on a single idle-client error — transient network blips
+  // on managed Postgres are common.
   console.error('Unexpected error on idle client', err);
-  process.exit(-1);
 });
 
 const query = (text, params) => {
