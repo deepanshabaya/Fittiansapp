@@ -8,6 +8,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import LoginScreen from '../screens/LoginScreen';
 import DashboardScreen from '../screens/DashboardScreen';
 import SessionManagementScreen from '../screens/SessionManagementScreen';
+import PlanScreen from '../screens/PlanScreen';
 import TrainerVerificationScreen from '../screens/TrainerVerificationScreen';
 import ProfileScreen from '../screens/ProfileScreen';
 import RegisterScreen from '../screens/RegisterScreen';
@@ -39,6 +40,7 @@ function AppTabs() {
           let iconName = 'home-outline';
           if (route.name === 'Dashboard') iconName = 'home-outline';
           if (route.name === 'Sessions') iconName = 'time-outline';
+          if (route.name === 'Plan') iconName = 'ribbon-outline';
           if (route.name === 'Profile') iconName = 'person-outline';
           return <Ionicons name={iconName} size={size} color={color} />;
         },
@@ -46,6 +48,7 @@ function AppTabs() {
     >
       <Tab.Screen name="Dashboard" component={DashboardScreen} />
       {!isTrainer && <Tab.Screen name="Sessions" component={SessionManagementScreen} />}
+      {!isTrainer && <Tab.Screen name="Plan" component={PlanScreen} />}
       <Tab.Screen name="Profile" component={ProfileScreen} />
     </Tab.Navigator>
   );

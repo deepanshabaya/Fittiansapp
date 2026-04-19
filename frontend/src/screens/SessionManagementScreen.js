@@ -13,7 +13,9 @@ import {
   ActivityIndicator,
 } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
+import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '../navigation/AppNavigator';
+import Card from '../components/Card';
 import {
   postponeDailySession,
   cancelDailySession,
@@ -33,6 +35,19 @@ function todayStartLocal() {
   const d = new Date();
   d.setHours(0, 0, 0, 0);
   return d;
+}
+
+// Parse "YYYY-MM-DD" to a nice "Tomorrow · 20 Apr" style label.
+function formatUpcomingDate(iso) {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(iso || '')) return '—';
+  const [y, m, d] = iso.split('-').map(Number);
+  const picked = new Date(y, m - 1, d);
+  const today = todayStartLocal();
+  const diff = Math.round((picked - today) / (1000 * 60 * 60 * 24));
+  const dayLabel = picked.toLocaleDateString('en-IN', { day: '2-digit', month: 'short' });
+  if (diff === 1) return `Tomorrow · ${dayLabel}`;
+  if (diff === 0) return `Today · ${dayLabel}`;
+  return dayLabel;
 }
 
 // Validate a YYYY-MM-DD string. Returns null if the date is strictly after today,
@@ -165,6 +180,10 @@ export default function SessionManagementScreen() {
     }
   };
 
+  const handleRenewPlan = () => {
+    Alert.alert('Renew Plan', 'Plan renewal will be available soon.');
+  };
+
   if (loading) {
     return (
       <SafeAreaView style={styles.safeArea} edges={['top']}>
@@ -176,6 +195,7 @@ export default function SessionManagementScreen() {
   }
 
   const limitReached = sessionsPostponed >= postponeLimit;
+  const postponeRemaining = Math.max(postponeLimit - sessionsPostponed, 0);
 
   return (
     <SafeAreaView style={styles.safeArea} edges={['top']}>
@@ -187,89 +207,149 @@ export default function SessionManagementScreen() {
         <ScrollView
           contentContainerStyle={[
             styles.contentContainer,
-            { paddingBottom: insets.bottom + 40 },
+            { paddingBottom: insets.bottom + 24 },
           ]}
           keyboardShouldPersistTaps="handled"
           showsVerticalScrollIndicator={false}
         >
-          <Text style={styles.title}>Session Management</Text>
-
-          {/* Summary card */}
-          <View style={styles.summaryCard}>
-            <View style={styles.summaryRow}>
-              <Text style={styles.summaryLabel}>Postponed Sessions</Text>
-              <Text style={[styles.summaryValue, limitReached && { color: '#EF4444' }]}>
-                {sessionsPostponed} / {postponeLimit}
-              </Text>
-            </View>
-            <View style={styles.summaryRow}>
-              <Text style={styles.summaryLabel}>Cancelled Sessions</Text>
-              <Text style={styles.summaryValue}>{sessionsCancelled}</Text>
+          {/* ── Header ── */}
+          <View style={styles.header}>
+            <Text style={styles.headerTitle}>Sessions</Text>
+            <View style={styles.headerIconWrap}>
+              <Ionicons name="calendar-outline" size={20} color="#ffc803" />
             </View>
           </View>
 
-          {/* Postpone card */}
-          <View style={styles.card}>
-            <Text style={styles.sectionTitle}>Postpone Session</Text>
-            <Text style={styles.meta}>
-              Must be done before 8 PM of previous day.
-            </Text>
+          {/* ── 1. Upcoming Session Card ── */}
+          <Text style={styles.sectionHeading}>Upcoming Session</Text>
+          <Card style={styles.upcomingCard}>
+            <View style={styles.upcomingLeft}>
+              <View style={styles.upcomingBadge}>
+                <Ionicons name="time-outline" size={12} color="#ffc803" />
+                <Text style={styles.upcomingBadgeText}>Next</Text>
+              </View>
+              <Text style={styles.upcomingDate}>{formatUpcomingDate(tomorrowISO())}</Text>
+              <Text style={styles.upcomingTime}>7:00 AM</Text>
+              <View style={styles.upcomingMetaRow}>
+                <Ionicons name="person-outline" size={13} color="#b3b3b3" />
+                <Text style={styles.upcomingMeta}>With your trainer</Text>
+              </View>
+            </View>
+            <View style={styles.upcomingRight}>
+              <Ionicons name="fitness" size={40} color="#ffc803" />
+            </View>
+          </Card>
+
+          {/* ── 2. Session Summary ── */}
+          <Text style={styles.sectionHeading}>Session Summary</Text>
+          <View style={styles.summaryRow}>
+            <Card style={styles.summaryBox}>
+              <View style={[styles.summaryIconWrap, { backgroundColor: 'rgba(255,200,3,0.12)' }]}>
+                <Ionicons name="pause-circle" size={18} color="#ffc803" />
+              </View>
+              <Text style={[styles.summaryValue, limitReached && { color: '#ef4444' }]}>
+                {sessionsPostponed}
+                <Text style={styles.summaryOf}>/{postponeLimit}</Text>
+              </Text>
+              <Text style={styles.summaryLabel}>Postponed</Text>
+              <Text style={styles.summaryHint}>
+                {limitReached ? 'Limit reached' : `${postponeRemaining} left`}
+              </Text>
+            </Card>
+            <View style={{ width: 12 }} />
+            <Card style={styles.summaryBox}>
+              <View style={[styles.summaryIconWrap, { backgroundColor: 'rgba(239,68,68,0.12)' }]}>
+                <Ionicons name="close-circle" size={18} color="#ef4444" />
+              </View>
+              <Text style={styles.summaryValue}>{sessionsCancelled}</Text>
+              <Text style={styles.summaryLabel}>Cancelled</Text>
+              <Text style={styles.summaryHint}>All-time</Text>
+            </Card>
+          </View>
+
+          {/* ── 3. Manage Sessions ── */}
+          <Text style={styles.sectionHeading}>Manage Sessions</Text>
+
+          {/* Postpone */}
+          <Card style={styles.actionCard}>
+            <View style={styles.actionHeader}>
+              <View style={[styles.actionIconWrap, { backgroundColor: 'rgba(255,200,3,0.12)' }]}>
+                <Ionicons name="calendar" size={18} color="#ffc803" />
+              </View>
+              <View style={{ flex: 1 }}>
+                <Text style={styles.actionTitle}>Postpone Session</Text>
+                <Text style={styles.actionSub}>Before 8 PM of previous day</Text>
+              </View>
+            </View>
             <TextInput
               style={styles.input}
-              placeholder="Session date (YYYY-MM-DD)"
+              placeholder="YYYY-MM-DD"
               placeholderTextColor="#6b6360"
               value={postponeDate}
               onChangeText={setPostponeDate}
             />
             <TouchableOpacity
-              style={[styles.button, (limitReached || submittingPostpone) && styles.buttonDisabled]}
+              style={[styles.primaryBtn, (limitReached || submittingPostpone) && styles.btnDisabled]}
               onPress={handlePostpone}
               disabled={limitReached || submittingPostpone}
-              activeOpacity={0.8}
+              activeOpacity={0.85}
             >
               {submittingPostpone ? (
                 <ActivityIndicator color="#1a1716" />
               ) : (
-                <Text style={styles.buttonText}>
+                <Text style={styles.primaryBtnText}>
                   {limitReached ? 'Limit Reached' : 'Postpone Session'}
                 </Text>
               )}
             </TouchableOpacity>
-          </View>
+          </Card>
 
-          {/* Cancel card */}
-          <View style={styles.card}>
-            <Text style={styles.sectionTitle}>Cancel Session</Text>
-            <Text style={styles.meta}>
-              Must be done before 8 PM of previous day.
-            </Text>
+          {/* Cancel */}
+          <Card style={styles.actionCard}>
+            <View style={styles.actionHeader}>
+              <View style={[styles.actionIconWrap, { backgroundColor: 'rgba(239,68,68,0.12)' }]}>
+                <Ionicons name="close-circle" size={18} color="#ef4444" />
+              </View>
+              <View style={{ flex: 1 }}>
+                <Text style={styles.actionTitle}>Cancel Session</Text>
+                <Text style={styles.actionSub}>Before 8 PM of previous day</Text>
+              </View>
+            </View>
             <TextInput
               style={styles.input}
-              placeholder="Session date (YYYY-MM-DD)"
+              placeholder="YYYY-MM-DD"
               placeholderTextColor="#6b6360"
               value={cancelDate}
               onChangeText={setCancelDate}
             />
             <TouchableOpacity
-              style={[styles.button, styles.secondaryButton, submittingCancel && styles.buttonDisabled]}
+              style={[styles.ghostBtn, submittingCancel && styles.btnDisabled]}
               onPress={handleCancel}
               disabled={submittingCancel}
-              activeOpacity={0.8}
+              activeOpacity={0.85}
             >
               {submittingCancel ? (
-                <ActivityIndicator color="#EF4444" />
+                <ActivityIndicator color="#ef4444" />
               ) : (
-                <Text style={[styles.buttonText, styles.secondaryButtonText]}>Cancel Session</Text>
+                <Text style={styles.ghostBtnText}>Cancel Session</Text>
               )}
             </TouchableOpacity>
-          </View>
+          </Card>
 
-          {/* Pause program card */}
-          <View style={styles.card}>
-            <Text style={styles.sectionTitle}>Pause Program</Text>
+          {/* Pause */}
+          <Card style={styles.actionCard}>
+            <View style={styles.actionHeader}>
+              <View style={[styles.actionIconWrap, { backgroundColor: 'rgba(255,200,3,0.12)' }]}>
+                <Ionicons name="pause-outline" size={18} color="#ffc803" />
+              </View>
+              <View style={{ flex: 1 }}>
+                <Text style={styles.actionTitle}>Pause Program</Text>
+                <Text style={styles.actionSub}>Request approval from your trainer</Text>
+              </View>
+            </View>
             <TextInput
               style={styles.input}
-              placeholder="Pause until date (YYYY-MM-DD)"
+              placeholder="Pause until (YYYY-MM-DD)"
               placeholderTextColor="#6b6360"
               value={pauseUntilDate}
               onChangeText={setPauseUntilDate}
@@ -284,18 +364,27 @@ export default function SessionManagementScreen() {
               onChangeText={setReason}
             />
             <TouchableOpacity
-              style={[styles.button, submittingPause && styles.buttonDisabled]}
+              style={[styles.primaryBtn, submittingPause && styles.btnDisabled]}
               onPress={handlePause}
               disabled={submittingPause}
-              activeOpacity={0.8}
+              activeOpacity={0.85}
             >
               {submittingPause ? (
                 <ActivityIndicator color="#1a1716" />
               ) : (
-                <Text style={styles.buttonText}>Submit Pause Request</Text>
+                <Text style={styles.primaryBtnText}>Submit Pause Request</Text>
               )}
             </TouchableOpacity>
-          </View>
+          </Card>
+
+          {/* ── 4. Renew Plan CTA ── */}
+          <TouchableOpacity
+            style={styles.renewBtn}
+            onPress={handleRenewPlan}
+            activeOpacity={0.85}
+          >
+            <Text style={styles.renewBtnText}>Renew Plan</Text>
+          </TouchableOpacity>
         </ScrollView>
       </KeyboardAvoidingView>
     </SafeAreaView>
@@ -306,30 +395,232 @@ const styles = StyleSheet.create({
   safeArea: { flex: 1, backgroundColor: '#1a1716' },
   flex: { flex: 1 },
   loadingWrap: { flex: 1, alignItems: 'center', justifyContent: 'center' },
-  contentContainer: { paddingHorizontal: 24, paddingTop: 24 },
-  title: { fontSize: 28, fontWeight: '800', color: '#ffc803', marginBottom: 20, letterSpacing: 0.3 },
-  summaryCard: {
-    backgroundColor: '#252120', borderRadius: 16, padding: 16,
-    marginBottom: 20, borderWidth: 1, borderColor: '#332e2b',
+  contentContainer: { paddingHorizontal: 20, paddingTop: 16 },
+
+  // Header
+  header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 18,
+    marginTop: 4,
   },
-  summaryRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingVertical: 6 },
-  summaryLabel: { fontSize: 14, color: '#a09890' },
-  summaryValue: { fontSize: 16, color: '#ffc803', fontWeight: '700' },
-  card: {
-    backgroundColor: '#252120', borderRadius: 16, padding: 20,
-    marginBottom: 24, borderWidth: 1, borderColor: '#332e2b',
+  headerTitle: {
+    color: '#ffffff',
+    fontSize: 26,
+    fontWeight: '800',
+    letterSpacing: 0.3,
   },
-  sectionTitle: { fontSize: 18, fontWeight: '700', color: '#fff', marginBottom: 6 },
-  meta: { fontSize: 13, color: '#a09890', marginBottom: 14 },
+  headerIconWrap: {
+    width: 38,
+    height: 38,
+    borderRadius: 12,
+    backgroundColor: '#242120',
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: '#2e2a28',
+  },
+
+  sectionHeading: {
+    color: '#ffffff',
+    fontSize: 15,
+    fontWeight: '700',
+    marginBottom: 10,
+    marginTop: 8,
+    letterSpacing: 0.2,
+  },
+
+  // Upcoming session card
+  upcomingCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 18,
+    marginBottom: 18,
+  },
+  upcomingLeft: { flex: 1 },
+  upcomingBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    alignSelf: 'flex-start',
+    backgroundColor: 'rgba(255,200,3,0.12)',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 8,
+    marginBottom: 10,
+  },
+  upcomingBadgeText: {
+    color: '#ffc803',
+    fontSize: 10,
+    fontWeight: '700',
+    textTransform: 'uppercase',
+    letterSpacing: 0.6,
+  },
+  upcomingDate: {
+    color: '#ffffff',
+    fontSize: 18,
+    fontWeight: '800',
+    letterSpacing: 0.2,
+  },
+  upcomingTime: {
+    color: '#ffc803',
+    fontSize: 14,
+    fontWeight: '700',
+    marginTop: 2,
+  },
+  upcomingMetaRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    marginTop: 8,
+  },
+  upcomingMeta: {
+    color: '#b3b3b3',
+    fontSize: 12,
+    fontWeight: '500',
+  },
+  upcomingRight: {
+    width: 70,
+    height: 70,
+    borderRadius: 16,
+    backgroundColor: 'rgba(255,200,3,0.10)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginLeft: 14,
+  },
+
+  // Summary boxes
+  summaryRow: {
+    flexDirection: 'row',
+    marginBottom: 18,
+  },
+  summaryBox: {
+    flex: 1,
+    padding: 16,
+    alignItems: 'flex-start',
+  },
+  summaryIconWrap: {
+    width: 34,
+    height: 34,
+    borderRadius: 10,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 10,
+  },
+  summaryValue: {
+    color: '#ffffff',
+    fontSize: 22,
+    fontWeight: '800',
+    letterSpacing: 0.3,
+  },
+  summaryOf: {
+    color: '#b3b3b3',
+    fontSize: 14,
+    fontWeight: '600',
+  },
+  summaryLabel: {
+    color: '#b3b3b3',
+    fontSize: 12,
+    marginTop: 2,
+    textTransform: 'uppercase',
+    letterSpacing: 0.6,
+  },
+  summaryHint: {
+    color: '#6b6360',
+    fontSize: 11,
+    marginTop: 4,
+    fontWeight: '500',
+  },
+
+  // Action cards
+  actionCard: { marginBottom: 14, padding: 16 },
+  actionHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    marginBottom: 14,
+  },
+  actionIconWrap: {
+    width: 36,
+    height: 36,
+    borderRadius: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  actionTitle: {
+    color: '#ffffff',
+    fontSize: 15,
+    fontWeight: '700',
+  },
+  actionSub: {
+    color: '#b3b3b3',
+    fontSize: 12,
+    marginTop: 2,
+  },
+
+  // Inputs
   input: {
-    borderWidth: 1, borderColor: '#332e2b', borderRadius: 12,
-    paddingHorizontal: 16, paddingVertical: 14, fontSize: 15,
-    backgroundColor: '#1f1b1a', color: '#fff', marginBottom: 14,
+    borderWidth: 1,
+    borderColor: '#2e2a28',
+    borderRadius: 12,
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+    fontSize: 14,
+    backgroundColor: '#1a1716',
+    color: '#ffffff',
+    marginBottom: 12,
   },
-  textArea: { height: 100, textAlignVertical: 'top' },
-  button: { backgroundColor: '#ffc803', paddingVertical: 16, borderRadius: 14, alignItems: 'center', marginTop: 8 },
-  buttonDisabled: { opacity: 0.5 },
-  buttonText: { color: '#1a1716', fontSize: 16, fontWeight: '700' },
-  secondaryButton: { backgroundColor: 'transparent', borderWidth: 1.5, borderColor: '#ef4444' },
-  secondaryButtonText: { color: '#ef4444', fontWeight: '700' },
+  textArea: { height: 90, textAlignVertical: 'top' },
+
+  // Buttons
+  primaryBtn: {
+    backgroundColor: '#ffc803',
+    paddingVertical: 14,
+    borderRadius: 14,
+    alignItems: 'center',
+    marginTop: 4,
+  },
+  primaryBtnText: {
+    color: '#1a1716',
+    fontSize: 15,
+    fontWeight: '700',
+    letterSpacing: 0.2,
+  },
+  ghostBtn: {
+    backgroundColor: 'transparent',
+    borderWidth: 1.5,
+    borderColor: '#ef4444',
+    paddingVertical: 13,
+    borderRadius: 14,
+    alignItems: 'center',
+    marginTop: 4,
+  },
+  ghostBtnText: {
+    color: '#ef4444',
+    fontSize: 15,
+    fontWeight: '700',
+    letterSpacing: 0.2,
+  },
+  btnDisabled: { opacity: 0.5 },
+
+  // Renew CTA
+  renewBtn: {
+    backgroundColor: '#ffc803',
+    paddingVertical: 16,
+    borderRadius: 16,
+    alignItems: 'center',
+    marginTop: 8,
+    shadowColor: '#ffc803',
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.3,
+    shadowRadius: 12,
+    elevation: 6,
+  },
+  renewBtnText: {
+    color: '#1a1716',
+    fontSize: 16,
+    fontWeight: '800',
+    letterSpacing: 0.3,
+  },
 });

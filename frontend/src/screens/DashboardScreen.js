@@ -13,7 +13,6 @@ import {
   FlatList,
   Alert,
   ActivityIndicator,
-  Dimensions,
 } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useAuth } from '../navigation/AppNavigator';
@@ -32,9 +31,11 @@ import {
 } from '../services/api';
 import { Ionicons } from '@expo/vector-icons';
 import TrainerCard from '../components/TrainerCard';
+import Card from '../components/Card';
+import StatBox from '../components/StatBox';
+import SectionTitle from '../components/SectionTitle';
+import SessionItem from '../components/SessionItem';
 import { isStepCountAvailable, requestStepPermission, getTodaySteps } from '../utils/stepCounter';
-
-const SCREEN_W = Dimensions.get('window').width;
 
 // ─── Option lists ────────────────────────────────────────
 const DAILY_ROUTINE_OPTS = ['sedentary', 'lightly_active', 'moderately_active', 'very_active', 'extra_active'];
@@ -425,105 +426,18 @@ export default function DashboardScreen() {
     if (c) openProgressForm(c);
   };
 
-  const renderCustomerCard = (c) => {
-    const sessionStatus = todaySessions[c.id];
-    const isMarking = !!markingIds[c.id];
-    const programTag = c.trial_sessions > 0 ? 'Trial' : c.free_sessions > 0 ? 'Free' : c.program_enrolled || '—';
-
-    return (
-      <View key={c.id} style={styles.card}>
-        <TouchableOpacity style={styles.cardTouchable} onPress={() => setActionCustomer(c)} activeOpacity={0.7}>
-          {c.upload_photo ? (
-            <Image source={{ uri: c.upload_photo }} style={styles.avatar} />
-          ) : (
-            <View style={[styles.avatar, styles.avatarPlaceholder]}>
-              <Text style={styles.avatarInitial}>{(c.name || '?')[0]}</Text>
-            </View>
-          )}
-          <View style={{ flex: 1 }}>
-            <Text style={styles.cardName}>{c.name}</Text>
-            <View style={styles.cardStatsRow}>
-              <View style={styles.cardStatChip}>
-                <Text style={styles.cardStatVal}>{c.total_sessions ?? 0}</Text>
-                <Text style={styles.cardStatLabel}>Total</Text>
-              </View>
-              <View style={styles.cardStatChip}>
-                <Text style={[styles.cardStatVal, { color: '#22c55e' }]}>{c.completed_sessions ?? 0}</Text>
-                <Text style={styles.cardStatLabel}>Done</Text>
-              </View>
-              <View style={styles.cardStatChip}>
-                <Text style={[styles.cardStatVal, { color: '#ef4444' }]}>{c.missed_sessions ?? 0}</Text>
-                <Text style={styles.cardStatLabel}>Missed</Text>
-              </View>
-            </View>
-            {c.address ? <Text style={styles.cardMeta} numberOfLines={1}>{c.address}</Text> : null}
-            <Text style={styles.tag}>{programTag}</Text>
-          </View>
-        </TouchableOpacity>
-
-        {/* Session marking */}
-        <View style={styles.cardActions}>
-          <TouchableOpacity
-            style={[
-              styles.sesBtn,
-              sessionStatus === 'completed' && styles.sesBtnActive,
-              isMarking && { opacity: 0.4 },
-            ]}
-            onPress={() => handleMarkSession(c.id, 'completed')}
-            disabled={isMarking}
-            activeOpacity={0.7}
-          >
-            <Ionicons name={sessionStatus === 'completed' ? 'checkmark-circle' : 'checkmark-circle-outline'} size={18} color={sessionStatus === 'completed' ? '#fff' : '#a09890'} />
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={[
-              styles.sesBtn,
-              styles.sesBtnMiss,
-              sessionStatus === 'missed' && styles.sesBtnMissActive,
-              isMarking && { opacity: 0.4 },
-            ]}
-            onPress={() => handleMarkSession(c.id, 'missed')}
-            disabled={isMarking}
-            activeOpacity={0.7}
-          >
-            <Ionicons name={sessionStatus === 'missed' ? 'close-circle' : 'close-circle-outline'} size={18} color={sessionStatus === 'missed' ? '#fff' : '#a09890'} />
-          </TouchableOpacity>
-        </View>
-      </View>
-    );
+  const handleMarkFromSheet = (status) => {
+    const c = actionCustomer;
+    setActionCustomer(null);
+    if (c) handleMarkSession(c.id, status);
   };
 
-  // ── Detail row helper (for client/payment cards) ──
-  const DetailRow = ({ label, value, prefix = '', suffix = '' }) => (
-    <View style={styles.detailRow}>
-      <Text style={styles.detailLabel}>{label}</Text>
-      <Text style={styles.detailValue}>
-        {value != null && value !== '' ? `${prefix}${value}${suffix}` : '—'}
-      </Text>
-    </View>
-  );
-
-  // ── Simple bar chart ──
-  const StepsChart = ({ data }) => {
-    if (!data || data.length === 0) return <Text style={styles.info}>No step data yet.</Text>;
-    const maxSteps = Math.max(...data.map(d => d.steps_per_day || 0), 1);
-    return (
-      <View style={styles.chartContainer}>
-        {data.map((d, i) => {
-          const steps = d.steps_per_day || 0;
-          const h = Math.max((steps / maxSteps) * 80, 4);
-          const dayLabel = new Date(d.log_date).toLocaleDateString('en', { weekday: 'short' });
-          return (
-            <View key={i} style={styles.chartBar}>
-              <Text style={styles.chartVal}>{steps}</Text>
-              <View style={[styles.bar, { height: h }]} />
-              <Text style={styles.chartLabel}>{dayLabel}</Text>
-            </View>
-          );
-        })}
-      </View>
-    );
-  };
+  // Derived trainer stats
+  const totalClients = customers.length;
+  const activeClients = customers.filter(
+    (c) => ((c.total_sessions ?? 0) - (c.completed_sessions ?? 0)) > 0
+  ).length;
+  const todaySessionsCount = customers.length;
 
   // ═══════════════════════════════════════════════════════
   // RENDER
@@ -559,111 +473,150 @@ export default function DashboardScreen() {
         {/* ── CUSTOMER: My Details tab ── */}
         {role === 'customer' && customerTab === 'details' && (
           <>
-            <Text style={styles.title}>My Details</Text>
             {error ? <Text style={styles.error}>{error}</Text> : null}
 
             {dashData && (
               <>
-                {/* ── Renewal Banner ── */}
-                {dashData.sessions_completed >= 12 && (
-                  <View style={[styles.banner, styles.bannerUrgent]}>
-                    <Text style={styles.bannerText}>
-                      Great job reaching here! Renew now to keep going.
-                    </Text>
+                {/* ── 1. Header ── */}
+                <View style={styles.header}>
+                  <View style={{ flex: 1 }}>
+                    <Text style={styles.hello}>Hello, {dashData.customer_details?.name || 'there'}</Text>
+                    <Text style={styles.helloSub}>Ready for your workout?</Text>
                   </View>
-                )}
-                {dashData.sessions_completed === 11 && (
-                  <View style={styles.banner}>
-                    <Text style={styles.bannerText}>
-                      Your membership is expiring soon. Renew now to continue your sessions.
-                    </Text>
-                  </View>
-                )}
-
-                {/* ── Client Details Card ── */}
-                <View style={styles.section}>
-                  <Text style={styles.sectionTitle}>Details</Text>
-
-                  {/* Profile photo + name */}
-                  <View style={styles.clientHeader}>
-                    {dashData.customer_details?.upload_photo ? (
-                      <Image source={{ uri: dashData.customer_details.upload_photo }} style={styles.clientAvatar} />
-                    ) : (
-                      <View style={[styles.clientAvatar, styles.avatarPlaceholder]}>
-                        <Text style={styles.avatarInitial}>{(dashData.customer_details?.name || '?')[0]}</Text>
-                      </View>
-                    )}
-                    <View style={{ flex: 1 }}>
-                      <Text style={styles.clientName}>{dashData.customer_details?.name || '—'}</Text>
-                      <Text style={styles.clientSub}>{dashData.customer_details?.mobile || '—'}</Text>
-                      {dashData.customer_details?.address ? (
-                        <Text style={styles.clientSub} numberOfLines={2}>{dashData.customer_details.address}</Text>
-                      ) : null}
+                  {dashData.customer_details?.upload_photo ? (
+                    <Image
+                      source={{ uri: avatarUri(dashData.customer_details.upload_photo) }}
+                      style={styles.headerAvatar}
+                    />
+                  ) : (
+                    <View style={[styles.headerAvatar, styles.headerAvatarPlaceholder]}>
+                      <Text style={styles.headerAvatarInitial}>
+                        {(dashData.customer_details?.name || '?')[0]}
+                      </Text>
                     </View>
-                  </View>
-
-                  {/* Health info grid */}
-                  <View style={styles.detailGrid}>
-                    <DetailRow label="Weight" value={dashData.latest_progress?.weight || dashData.customer_details?.weight} suffix=" kg" />
-                    <DetailRow label="Height" value={dashData.latest_progress?.height || dashData.customer_details?.height} suffix=" cm" />
-                    <DetailRow label="Age" value={dashData.customer_details?.age} />
-                    <DetailRow label="Fitness Goal" value={dashData.customer_details?.fitness_goal} />
-                    <DetailRow label="Daily Routine" value={dashData.customer_details?.daily_routine} />
-                    <DetailRow label="Medical Conditions" value={dashData.customer_details?.medical_conditions} />
-                    <DetailRow label="Smoking" value={dashData.customer_details?.smoking} />
-                    <DetailRow label="Alcohol" value={dashData.customer_details?.alcohol_frequency} />
-                    <DetailRow label="Diet" value={dashData.customer_details?.dietary_preference} />
-                    <DetailRow label="Special Focus" value={dashData.customer_details?.special_focus} />
-                    <DetailRow label="Program" value={dashData.customer_details?.program_enrolled} />
-                  </View>
-                </View>
-
-                {/* ── Payment Details Card ── */}
-                <View style={styles.section}>
-                  <Text style={styles.sectionTitle}>Payment Details</Text>
-                  <View style={styles.detailGrid}>
-                    <DetailRow label="Amount Paid" value={dashData.amount_paid} prefix="Rs " />
-                    <DetailRow label="Total Sessions" value={dashData.total_sessions} />
-                    <DetailRow label="Sessions Completed" value={dashData.sessions_completed} />
-                    <DetailRow label="Sessions Remaining" value={dashData.sessions_remaining} />
-                    <DetailRow label="Start Date" value={dashData.start_date ? new Date(dashData.start_date).toLocaleDateString('en-IN') : null} />
-                  </View>
-                </View>
-
-                {/* ── Session Stats (compact) ── */}
-                <View style={styles.statsRow}>
-                  <View style={styles.statCard}>
-                    <Text style={styles.statNum}>{dashData.streak}</Text>
-                    <Text style={styles.statLabel}>Day Streak</Text>
-                  </View>
-                  <View style={styles.statCard}>
-                    <Text style={[styles.statNum, { color: '#22c55e' }]}>{dashData.sessions.completed}</Text>
-                    <Text style={styles.statLabel}>Completed</Text>
-                  </View>
-                  <View style={styles.statCard}>
-                    <Text style={[styles.statNum, { color: '#ef4444' }]}>{dashData.sessions.missed}</Text>
-                    <Text style={styles.statLabel}>Missed</Text>
-                  </View>
-                </View>
-
-                {/* Steps */}
-                <View style={styles.section}>
-                  <Text style={styles.sectionTitle}>Steps Today</Text>
-                  <Text style={styles.bigNum}>{dashData.steps_today ?? '—'}</Text>
-                  {stepsAvailable && (
-                    <TouchableOpacity style={styles.syncBtn} onPress={handleSyncSteps} disabled={stepsSyncing}>
-                      {stepsSyncing ? <ActivityIndicator color="#1a1716" /> :
-                        <Text style={styles.syncBtnText}>Sync from Device</Text>}
-                    </TouchableOpacity>
                   )}
                 </View>
 
+                {/* ── 2. Membership Banner ── */}
+                {dashData.sessions_completed >= 12 && (
+                  <View style={[styles.membershipBanner, styles.membershipBannerUrgent]}>
+                    <View style={styles.membershipIconWrap}>
+                      <Ionicons name="alert-circle" size={22} color="#1a1716" />
+                    </View>
+                    <View style={{ flex: 1 }}>
+                      <Text style={styles.membershipTitle}>Plan Expired</Text>
+                      <Text style={styles.membershipSub}>Renew now to keep going.</Text>
+                    </View>
+                    <Ionicons name="chevron-forward" size={18} color="#1a1716" />
+                  </View>
+                )}
+                {dashData.sessions_completed === 11 && (
+                  <View style={styles.membershipBanner}>
+                    <View style={styles.membershipIconWrap}>
+                      <Ionicons name="flash" size={22} color="#1a1716" />
+                    </View>
+                    <View style={{ flex: 1 }}>
+                      <Text style={styles.membershipTitle}>
+                        {dashData.sessions_remaining ?? 1} session left
+                      </Text>
+                      <Text style={styles.membershipSub}>Renew your plan to continue.</Text>
+                    </View>
+                    <Ionicons name="chevron-forward" size={18} color="#1a1716" />
+                  </View>
+                )}
+
+                {/* ── 3. Today's Stats ── */}
+                <Text style={styles.sectionHeading}>Today's Stats</Text>
+                <Card style={styles.todayCard}>
+                  <View style={styles.todayRow}>
+                    <View style={styles.todayCol}>
+                      <View style={styles.todayIconWrap}>
+                        <Ionicons name="walk" size={20} color="#ffc803" />
+                      </View>
+                      <Text style={styles.todayValue}>{dashData.steps_today ?? '—'}</Text>
+                      <Text style={styles.todayLabel}>Steps</Text>
+                    </View>
+                    <View style={styles.todayDivider} />
+                    <View style={styles.todayCol}>
+                      <View style={styles.todayIconWrap}>
+                        <Ionicons name="moon" size={20} color="#ffc803" />
+                      </View>
+                      <Text style={styles.todayValue}>
+                        {dashData.latest_progress?.sleep_hours ?? '—'}
+                      </Text>
+                      <Text style={styles.todayLabel}>Sleep (hrs)</Text>
+                    </View>
+                  </View>
+                  {stepsAvailable && (
+                    <TouchableOpacity
+                      style={styles.syncBtn}
+                      onPress={handleSyncSteps}
+                      disabled={stepsSyncing}
+                      activeOpacity={0.8}
+                    >
+                      {stepsSyncing ? (
+                        <ActivityIndicator color="#1a1716" />
+                      ) : (
+                        <>
+                          <Ionicons name="sync" size={14} color="#1a1716" />
+                          <Text style={styles.syncBtnText}>Sync from Device</Text>
+                        </>
+                      )}
+                    </TouchableOpacity>
+                  )}
+                </Card>
+
+                {/* ── 4. Performance ── */}
+                <Text style={styles.sectionHeading}>Performance</Text>
+                <View style={styles.perfRow}>
+                  <StatBox
+                    value={dashData.sessions?.completed ?? 0}
+                    label="Completed"
+                    color="#22c55e"
+                    icon="checkmark-circle"
+                  />
+                  <View style={{ width: 10 }} />
+                  <StatBox
+                    value={dashData.sessions?.missed ?? 0}
+                    label="Missed"
+                    color="#ef4444"
+                    icon="close-circle"
+                  />
+                  <View style={{ width: 10 }} />
+                  <StatBox
+                    value={dashData.streak ?? 0}
+                    label="Streak"
+                    color="#ffc803"
+                    icon="flame"
+                  />
+                </View>
+
+                {/* ── 5. Weekly Progress ── */}
+                <Text style={styles.sectionHeading}>Weekly Progress</Text>
+                <Card>
+                  <View style={styles.chartHeader}>
+                    <Text style={styles.chartTitle}>Steps This Week</Text>
+                    <View style={styles.chartBadge}>
+                      <View style={styles.chartDot} />
+                      <Text style={styles.chartBadgeText}>Steps</Text>
+                    </View>
+                  </View>
+                  <View style={styles.chartPlaceholder}>
+                    <Ionicons name="trending-up" size={32} color="#ffc803" />
+                    <Text style={styles.chartPlaceholderText}>
+                      Chart coming soon
+                    </Text>
+                  </View>
+                </Card>
+
                 {/* Trainer note */}
                 {dashData.latest_note && (
-                  <View style={styles.section}>
-                    <Text style={styles.sectionTitle}>Trainer Note</Text>
-                    <Text style={styles.noteText}>{dashData.latest_note.trainer_note}</Text>
-                  </View>
+                  <>
+                    <Text style={styles.sectionHeading}>Trainer Note</Text>
+                    <Card>
+                      <Text style={styles.noteText}>{dashData.latest_note.trainer_note}</Text>
+                    </Card>
+                  </>
                 )}
               </>
             )}
@@ -687,12 +640,47 @@ export default function DashboardScreen() {
         {/* ── TRAINER view ── */}
         {role === 'trainer' && (
           <>
-            <Text style={styles.title}>My Customers</Text>
+            <View style={styles.trHeader}>
+              <View style={{ flex: 1 }}>
+                <Text style={styles.trHello}>Hello, Coach 👋</Text>
+                <Text style={styles.trHelloSub}>Here's what's on today.</Text>
+              </View>
+            </View>
+
             {error ? <Text style={styles.error}>{error}</Text> : null}
-            {customers.length === 0 && !loading && (
-              <Text style={styles.info}>No customers assigned yet.</Text>
-            )}
-            {customers.map(renderCustomerCard)}
+
+            {/* Stats */}
+            <View style={styles.trStatsRow}>
+              <StatBox value={totalClients} label="Clients" icon="people" />
+              <View style={{ width: 10 }} />
+              <StatBox value={activeClients} label="Active" color="#22c55e" icon="flash" />
+              <View style={{ width: 10 }} />
+              <StatBox value={todaySessionsCount} label="Sessions Today" icon="time-outline" />
+            </View>
+
+            {/* Today's Sessions */}
+            <SectionTitle>Today's Sessions</SectionTitle>
+            <Card>
+              {customers.length === 0 ? (
+                <Text style={styles.emptyText}>No sessions today</Text>
+              ) : (
+                customers.map((c, idx) => (
+                  <SessionItem
+                    key={c.id}
+                    customer={c}
+                    status={todaySessions[c.id] || 'pending'}
+                    onPress={() => setActionCustomer(c)}
+                    divider={idx < customers.length - 1}
+                  />
+                ))
+              )}
+            </Card>
+
+            {/* Pending Actions */}
+            <SectionTitle>Pending Actions</SectionTitle>
+            <Card>
+              <Text style={styles.emptyText}>No pending actions</Text>
+            </Card>
           </>
         )}
       </ScrollView>
@@ -702,6 +690,30 @@ export default function DashboardScreen() {
         <TouchableOpacity style={styles.modalBackdrop} activeOpacity={1} onPress={() => setActionCustomer(null)}>
           <View style={styles.actionSheet}>
             <Text style={styles.actionTitle}>{actionCustomer?.name}</Text>
+            <TouchableOpacity
+              style={styles.actionBtn}
+              onPress={() => handleMarkFromSheet('completed')}
+              activeOpacity={0.7}
+              disabled={actionCustomer && todaySessions[actionCustomer.id] === 'completed'}
+            >
+              <View style={[styles.actionBtnIconWrap, { backgroundColor: 'rgba(34,197,94,0.12)' }]}>
+                <Ionicons name="checkmark-circle" size={18} color="#22c55e" />
+              </View>
+              <Text style={styles.actionBtnText}>Mark Completed</Text>
+              <Ionicons name="chevron-forward" size={16} color="#6b6360" />
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={styles.actionBtn}
+              onPress={() => handleMarkFromSheet('missed')}
+              activeOpacity={0.7}
+              disabled={actionCustomer && todaySessions[actionCustomer.id] === 'missed'}
+            >
+              <View style={[styles.actionBtnIconWrap, { backgroundColor: 'rgba(239,68,68,0.12)' }]}>
+                <Ionicons name="close-circle" size={18} color="#ef4444" />
+              </View>
+              <Text style={styles.actionBtnText}>Mark Missed</Text>
+              <Ionicons name="chevron-forward" size={16} color="#6b6360" />
+            </TouchableOpacity>
             <TouchableOpacity style={styles.actionBtn} onPress={handleViewDetails} activeOpacity={0.7}>
               <View style={styles.actionBtnIconWrap}>
                 <Ionicons name="person-outline" size={18} color="#ffc803" />
@@ -873,7 +885,18 @@ const styles = StyleSheet.create({
   section: { backgroundColor: '#252120', borderRadius: 14, padding: 16, marginBottom: 12, borderWidth: 1, borderColor: '#332e2b' },
   sectionTitle: { fontSize: 16, fontWeight: '600', color: '#ffffff', marginBottom: 8 },
   bigNum: { fontSize: 36, fontWeight: '800', color: '#ffc803', textAlign: 'center', marginVertical: 4 },
-  syncBtn: { backgroundColor: '#ffc803', borderRadius: 12, paddingVertical: 8, paddingHorizontal: 16, alignSelf: 'center', marginTop: 8 },
+  syncBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+    backgroundColor: '#ffc803',
+    borderRadius: 12,
+    paddingVertical: 10,
+    paddingHorizontal: 18,
+    alignSelf: 'center',
+    marginTop: 14,
+  },
   syncBtnText: { color: '#1a1716', fontWeight: '700', fontSize: 13 },
   noteText: { color: '#a09890', fontSize: 14, lineHeight: 20 },
 
@@ -1007,11 +1030,215 @@ const styles = StyleSheet.create({
   detailLabel: { color: '#a09890', fontSize: 13 },
   detailValue: { color: '#fff', fontSize: 13, fontWeight: '600', maxWidth: '55%', textAlign: 'right' },
 
-  // Renewal banner
+  // Renewal banner (legacy — kept in case of other callers)
   banner: {
     backgroundColor: '#ffc803', borderRadius: 12, padding: 14,
     marginBottom: 14, alignItems: 'center',
   },
   bannerUrgent: { backgroundColor: '#EF4444' },
   bannerText: { color: '#fff', fontSize: 14, fontWeight: '700', textAlign: 'center' },
+
+  // ── Redesigned customer dashboard ──
+  header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 20,
+    marginTop: 4,
+  },
+  hello: {
+    color: '#ffffff',
+    fontSize: 24,
+    fontWeight: '800',
+    letterSpacing: 0.2,
+  },
+  helloSub: {
+    color: '#b3b3b3',
+    fontSize: 14,
+    marginTop: 4,
+  },
+  headerAvatar: {
+    width: 52,
+    height: 52,
+    borderRadius: 26,
+    borderWidth: 2,
+    borderColor: '#ffc803',
+  },
+  headerAvatarPlaceholder: {
+    backgroundColor: '#242120',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  headerAvatarInitial: {
+    color: '#ffc803',
+    fontSize: 22,
+    fontWeight: '700',
+  },
+
+  membershipBanner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#ffc803',
+    borderRadius: 16,
+    paddingVertical: 14,
+    paddingHorizontal: 16,
+    marginBottom: 18,
+    gap: 12,
+    shadowColor: '#ffc803',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.25,
+    shadowRadius: 10,
+    elevation: 4,
+  },
+  membershipBannerUrgent: { backgroundColor: '#ef4444' },
+  membershipIconWrap: {
+    width: 36,
+    height: 36,
+    borderRadius: 12,
+    backgroundColor: 'rgba(26,23,22,0.15)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  membershipTitle: {
+    color: '#1a1716',
+    fontSize: 15,
+    fontWeight: '800',
+    letterSpacing: 0.2,
+  },
+  membershipSub: {
+    color: '#1a1716',
+    fontSize: 12,
+    fontWeight: '600',
+    opacity: 0.8,
+    marginTop: 2,
+  },
+
+  sectionHeading: {
+    color: '#ffffff',
+    fontSize: 16,
+    fontWeight: '700',
+    marginBottom: 10,
+    marginTop: 6,
+    letterSpacing: 0.2,
+  },
+
+  todayCard: { marginBottom: 18 },
+  todayRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  todayCol: {
+    flex: 1,
+    alignItems: 'center',
+    paddingVertical: 6,
+  },
+  todayDivider: {
+    width: 1,
+    alignSelf: 'stretch',
+    backgroundColor: '#2e2a28',
+    marginHorizontal: 8,
+  },
+  todayIconWrap: {
+    width: 38,
+    height: 38,
+    borderRadius: 12,
+    backgroundColor: 'rgba(255,200,3,0.12)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 10,
+  },
+  todayValue: {
+    color: '#ffffff',
+    fontSize: 26,
+    fontWeight: '800',
+    letterSpacing: 0.3,
+  },
+  todayLabel: {
+    color: '#b3b3b3',
+    fontSize: 11,
+    marginTop: 4,
+    textTransform: 'uppercase',
+    letterSpacing: 0.6,
+  },
+
+  perfRow: {
+    flexDirection: 'row',
+    marginBottom: 18,
+  },
+
+  chartHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 14,
+  },
+  chartTitle: {
+    color: '#ffffff',
+    fontSize: 14,
+    fontWeight: '700',
+  },
+  chartBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    backgroundColor: 'rgba(255,200,3,0.12)',
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: 10,
+  },
+  chartDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: '#ffc803',
+  },
+  chartBadgeText: {
+    color: '#ffc803',
+    fontSize: 11,
+    fontWeight: '700',
+  },
+  chartPlaceholder: {
+    height: 140,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#1f1b1a',
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: '#2e2a28',
+    borderStyle: 'dashed',
+    gap: 8,
+  },
+  chartPlaceholderText: {
+    color: '#b3b3b3',
+    fontSize: 12,
+    fontWeight: '600',
+  },
+
+  // ── Trainer dashboard ──
+  trHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 18,
+    marginTop: 4,
+  },
+  trHello: {
+    color: '#ffffff',
+    fontSize: 24,
+    fontWeight: '800',
+    letterSpacing: 0.2,
+  },
+  trHelloSub: {
+    color: '#b3b3b3',
+    fontSize: 13,
+    marginTop: 4,
+  },
+  trStatsRow: {
+    flexDirection: 'row',
+    marginBottom: 18,
+  },
+  emptyText: {
+    color: '#b3b3b3',
+    fontSize: 13,
+    textAlign: 'center',
+    paddingVertical: 16,
+  },
 });

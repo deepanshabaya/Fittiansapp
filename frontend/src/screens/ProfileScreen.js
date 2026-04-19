@@ -18,6 +18,8 @@ import { Ionicons } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useAuth } from '../navigation/AppNavigator';
+import Card from '../components/Card';
+import InfoRow from '../components/InfoRow';
 import {
   fetchMyTrainerProfile,
   updateMyTrainerProfile,
@@ -25,6 +27,14 @@ import {
   updateMyCustomerProfile,
   avatarUri,
 } from '../services/api';
+
+// Format a snake_case enum value like "weight_loss" → "Weight Loss".
+function prettyEnum(v) {
+  if (v == null || v === '') return null;
+  return String(v)
+    .replace(/_/g, ' ')
+    .replace(/\b\w/g, (c) => c.toUpperCase());
+}
 
 // Non-photo trainer fields. `profile` (photo) now goes through the image picker
 // instead of a URL input.
@@ -240,71 +250,138 @@ export default function ProfileScreen() {
       >
         <Text style={styles.title}>Profile</Text>
 
-        {/* Identity header */}
-        <View style={styles.identityCard}>
-          <View style={styles.avatar}>
-            {headerPhoto ? (
-              <Image source={{ uri: headerPhoto }} style={styles.avatarImg} />
-            ) : (
-              <Text style={styles.avatarText}>{initial}</Text>
-            )}
-          </View>
-          <View style={styles.identityText}>
-            <Text style={styles.identityName} numberOfLines={1}>
-              {displayName}
-            </Text>
-            <View style={styles.roleChip}>
-              <Ionicons
-                name={role === 'trainer' ? 'fitness-outline' : 'person-outline'}
-                size={12}
-                color="#ffc803"
-              />
-              <Text style={styles.roleChipText}>{role ? role.toUpperCase() : 'USER'}</Text>
+        {/* ── Identity header (trainer + fallback) ── */}
+        {role !== 'customer' && (
+          <View style={styles.identityCard}>
+            <View style={styles.avatar}>
+              {headerPhoto ? (
+                <Image source={{ uri: headerPhoto }} style={styles.avatarImg} />
+              ) : (
+                <Text style={styles.avatarText}>{initial}</Text>
+              )}
+            </View>
+            <View style={styles.identityText}>
+              <Text style={styles.identityName} numberOfLines={1}>
+                {displayName}
+              </Text>
+              <View style={styles.roleChip}>
+                <Ionicons
+                  name={role === 'trainer' ? 'fitness-outline' : 'person-outline'}
+                  size={12}
+                  color="#ffc803"
+                />
+                <Text style={styles.roleChipText}>{role ? role.toUpperCase() : 'USER'}</Text>
+              </View>
             </View>
           </View>
-        </View>
+        )}
 
-        {/* Account details */}
-        <View style={styles.card}>
-          <Text style={styles.sectionTitle}>Account</Text>
-          <View style={styles.fieldRow}>
-            <Text style={styles.label}>Email</Text>
-            <Text style={styles.value}>{user?.email || 'N/A'}</Text>
-          </View>
-          <View style={styles.fieldRow}>
-            <Text style={styles.label}>Role</Text>
-            <Text style={styles.value}>{role ? role.toUpperCase() : 'N/A'}</Text>
-          </View>
-        </View>
-
-        {role === 'customer' && (
+        {/* Account details (trainer + fallback) */}
+        {role !== 'customer' && (
           <View style={styles.card}>
-            <Text style={styles.sectionTitle}>My Details</Text>
-            {customerLoading ? (
-              <ActivityIndicator size="large" color="#ffc803" style={{ marginVertical: 24 }} />
-            ) : customerInfo ? (
-              <>
-                <View style={styles.fieldRow}>
-                  <Text style={styles.label}>Mobile</Text>
-                  <Text style={styles.value}>{customerInfo.mobile || 'Not set'}</Text>
-                </View>
-                <View style={styles.fieldRow}>
-                  <Text style={styles.label}>Address</Text>
-                  <Text style={styles.value}>{customerInfo.address || 'Not set'}</Text>
-                </View>
-                <View style={styles.fieldRow}>
-                  <Text style={styles.label}>Photo</Text>
+            <Text style={styles.sectionTitle}>Account</Text>
+            <View style={styles.fieldRow}>
+              <Text style={styles.label}>Email</Text>
+              <Text style={styles.value}>{user?.email || 'N/A'}</Text>
+            </View>
+            <View style={styles.fieldRow}>
+              <Text style={styles.label}>Role</Text>
+              <Text style={styles.value}>{role ? role.toUpperCase() : 'N/A'}</Text>
+            </View>
+          </View>
+        )}
+
+        {/* ── Customer: premium layout ── */}
+        {role === 'customer' && (
+          customerLoading ? (
+            <ActivityIndicator size="large" color="#ffc803" style={{ marginVertical: 40 }} />
+          ) : customerInfo ? (
+            <>
+              {/* 1. Profile Header */}
+              <Card style={styles.profileHeaderCard}>
+                <View style={styles.profileAvatar}>
                   {customerExistingPhoto ? (
-                    <Image source={{ uri: customerExistingPhoto }} style={styles.photoPreview} />
+                    <Image source={{ uri: customerExistingPhoto }} style={styles.profileAvatarImg} />
                   ) : (
-                    <Text style={styles.value}>Not set</Text>
+                    <Text style={styles.profileAvatarText}>
+                      {(customerInfo.name || '?').charAt(0).toUpperCase()}
+                    </Text>
                   )}
                 </View>
-              </>
-            ) : (
-              <Text style={styles.emptyText}>No customer profile found.</Text>
-            )}
-          </View>
+                <View style={{ flex: 1, marginLeft: 14 }}>
+                  <Text style={styles.profileName} numberOfLines={1}>
+                    {customerInfo.name || displayName}
+                  </Text>
+                  {customerInfo.mobile ? (
+                    <View style={styles.profileMetaRow}>
+                      <Ionicons name="call-outline" size={13} color="#b3b3b3" />
+                      <Text style={styles.profileMeta}>{customerInfo.mobile}</Text>
+                    </View>
+                  ) : null}
+                  {customerInfo.address ? (
+                    <View style={styles.profileMetaRow}>
+                      <Ionicons name="location-outline" size={13} color="#b3b3b3" />
+                      <Text style={styles.profileMeta} numberOfLines={2}>
+                        {customerInfo.address}
+                      </Text>
+                    </View>
+                  ) : null}
+                </View>
+              </Card>
+
+              {/* 2. Personal Info */}
+              <Text style={styles.sectionHeading}>Personal Info</Text>
+              <Card>
+                <InfoRow label="Age" value={customerInfo.age} />
+                <InfoRow label="Height" value={customerInfo.height} suffix=" cm" />
+                <InfoRow label="Weight" value={customerInfo.weight} suffix=" kg" last />
+              </Card>
+
+              {/* 3. Fitness Info */}
+              <Text style={styles.sectionHeading}>Fitness Info</Text>
+              <Card>
+                <InfoRow label="Fitness Goal" value={prettyEnum(customerInfo.fitness_goal)} />
+                <InfoRow label="Daily Routine" value={prettyEnum(customerInfo.daily_routine)} />
+                <InfoRow label="Special Focus" value={customerInfo.special_focus} last />
+              </Card>
+
+              {/* 4. Lifestyle */}
+              <Text style={styles.sectionHeading}>Lifestyle</Text>
+              <Card>
+                <InfoRow label="Diet" value={prettyEnum(customerInfo.dietary_preference)} />
+                <InfoRow label="Smoking" value={prettyEnum(customerInfo.smoking)} />
+                <InfoRow label="Alcohol" value={prettyEnum(customerInfo.alcohol_frequency)} />
+                <InfoRow label="Medical Conditions" value={customerInfo.medical_conditions} last />
+              </Card>
+
+              {/* 5. Program Info */}
+              <Text style={styles.sectionHeading}>Program</Text>
+              <Card>
+                <InfoRow
+                  label="Program"
+                  value={prettyEnum(customerInfo.program_enrolled)}
+                  last
+                />
+              </Card>
+
+              {/* 6. Trainer Info — rendered only if data is present */}
+              {customerInfo.trainer_name || customerInfo.trainer_specialization ? (
+                <>
+                  <Text style={styles.sectionHeading}>Trainer</Text>
+                  <Card>
+                    <InfoRow label="Name" value={customerInfo.trainer_name} />
+                    <InfoRow
+                      label="Specialization"
+                      value={customerInfo.trainer_specialization}
+                      last
+                    />
+                  </Card>
+                </>
+              ) : null}
+            </>
+          ) : (
+            <Text style={styles.emptyText}>No customer profile found.</Text>
+          )
         )}
 
         {role === 'trainer' && (
@@ -749,5 +826,57 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: '800',
     letterSpacing: 0.3,
+  },
+
+  // ── Customer premium layout ──
+  sectionHeading: {
+    color: '#ffffff',
+    fontSize: 15,
+    fontWeight: '700',
+    marginBottom: 10,
+    marginTop: 10,
+    letterSpacing: 0.2,
+  },
+
+  profileHeaderCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 18,
+    marginBottom: 8,
+  },
+  profileAvatar: {
+    width: 64,
+    height: 64,
+    borderRadius: 32,
+    backgroundColor: 'rgba(255,200,3,0.12)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 2,
+    borderColor: '#ffc803',
+    overflow: 'hidden',
+  },
+  profileAvatarImg: { width: '100%', height: '100%' },
+  profileAvatarText: {
+    color: '#ffc803',
+    fontSize: 24,
+    fontWeight: '800',
+  },
+  profileName: {
+    color: '#ffffff',
+    fontSize: 18,
+    fontWeight: '800',
+    letterSpacing: 0.2,
+  },
+  profileMetaRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    marginTop: 6,
+  },
+  profileMeta: {
+    color: '#b3b3b3',
+    fontSize: 13,
+    fontWeight: '500',
+    flex: 1,
   },
 });
