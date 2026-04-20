@@ -11,10 +11,11 @@ let pool;
 // case (e.g. local docker, Railway internal network without TLS).
 if (process.env.DATABASE_URL) {
   const sslDisabled = process.env.DB_SSL === 'false';
-  pool = new Pool({
-    connectionString: process.env.DATABASE_URL,
-    ssl: sslDisabled ? false : { rejectUnauthorized: false },
-  });
+   pool = new Pool({
+  connectionString: process.env.DATABASE_URL,
+  ssl: { rejectUnauthorized: false },
+  family: 4
+});
 } else {
   // Local development using discrete env vars
   pool = new Pool({

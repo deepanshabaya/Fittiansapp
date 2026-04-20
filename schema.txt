@@ -1,0 +1,300 @@
+-- =========================
+-- SEQUENCES (CREATE FIRST)
+-- =========================
+
+CREATE SEQUENCE IF NOT EXISTS users_id_seq;
+CREATE SEQUENCE IF NOT EXISTS customers_id_seq;
+CREATE SEQUENCE IF NOT EXISTS customers_history_id_seq;
+CREATE SEQUENCE IF NOT EXISTS trainers_id_seq;
+CREATE SEQUENCE IF NOT EXISTS programs_id_seq;
+CREATE SEQUENCE IF NOT EXISTS customer_programs_id_seq;
+CREATE SEQUENCE IF NOT EXISTS customer_sessions_id_seq;
+CREATE SEQUENCE IF NOT EXISTS customer_progress_id_seq;
+CREATE SEQUENCE IF NOT EXISTS customer_progress_history_history_id_seq;
+CREATE SEQUENCE IF NOT EXISTS pause_requests_id_seq;
+CREATE SEQUENCE IF NOT EXISTS legal_documents_id_seq;
+CREATE SEQUENCE IF NOT EXISTS user_agreements_id_seq;
+
+-- =========================
+-- TABLES
+-- =========================
+
+-- USERS
+CREATE TABLE IF NOT EXISTS public.users (
+    id integer NOT NULL DEFAULT nextval('users_id_seq'),
+    name character varying(255),
+    email character varying(255),
+    password_hash character varying(255),
+    password character varying(255),
+    role character varying(20) NOT NULL,
+    created_at timestamp without time zone DEFAULT now(),
+    mobile character varying(10),
+    is_registered boolean DEFAULT false,
+    modifiedon timestamp without time zone,
+    CONSTRAINT users_pkey PRIMARY KEY (id),
+    CONSTRAINT users_email_key UNIQUE (email),
+    CONSTRAINT mobile UNIQUE (mobile),
+    CONSTRAINT users_role_check CHECK (role IN ('admin','trainer','customer'))
+);
+
+-- CUSTOMERS
+CREATE TABLE IF NOT EXISTS public.customers (
+    id integer NOT NULL DEFAULT nextval('customers_id_seq'),
+    user_id integer NOT NULL,
+    start_date date,
+    created_at timestamp without time zone DEFAULT now(),
+    name text,
+    mobile character varying(10),
+    address text,
+    total_sessions integer,
+    upload_photo text,
+    weight numeric,
+    height numeric,
+    amount_paid numeric,
+    amount_paid_on timestamp without time zone,
+    age integer,
+    daily_routine character varying(50),
+    medical_conditions text,
+    fitness_goal character varying(30),
+    smoking character varying(20),
+    alcohol_frequency character varying(50),
+    dietary_preference character varying(20),
+    special_focus text,
+    program_enrolled character varying(50),
+    modifiedon timestamp without time zone,
+    modifiedby character varying(100),
+    postpone_limit integer DEFAULT 2,
+    CONSTRAINT customers_pkey PRIMARY KEY (id),
+    CONSTRAINT customers_user_id_key UNIQUE (user_id),
+    CONSTRAINT customers_user_id_fkey FOREIGN KEY (user_id)
+        REFERENCES public.users (id) ON DELETE CASCADE
+);
+
+-- TRAINERS
+CREATE TABLE IF NOT EXISTS public.trainers (
+    id integer NOT NULL DEFAULT nextval('trainers_id_seq'),
+    user_id integer NOT NULL,
+    bio text,
+    specialization character varying(255),
+    certifications character varying(255),
+    introduction_video_url text,
+    created_at timestamp without time zone DEFAULT now(),
+    name character varying(50),
+    profile text,
+    mobileno character varying(10),
+    total_customers_mapped integer,
+    CONSTRAINT trainers_pkey PRIMARY KEY (id),
+    CONSTRAINT trainers_user_id_key UNIQUE (user_id),
+    CONSTRAINT trainers_user_id_fkey FOREIGN KEY (user_id)
+        REFERENCES public.users (id) ON DELETE CASCADE
+);
+
+-- PROGRAMS
+CREATE TABLE IF NOT EXISTS public.programs (
+    id integer NOT NULL DEFAULT nextval('programs_id_seq'),
+    name character varying(255) NOT NULL,
+    description text,
+    created_at timestamp without time zone DEFAULT now(),
+    isactive boolean DEFAULT true,
+    CONSTRAINT programs_pkey PRIMARY KEY (id)
+);
+
+-- CUSTOMER PROGRAMS
+CREATE TABLE IF NOT EXISTS public.customer_programs (
+    id integer NOT NULL DEFAULT nextval('customer_programs_id_seq'),
+    customer_id integer NOT NULL,
+    program_id integer NOT NULL,
+    total_sessions integer NOT NULL,
+    remaining_sessions integer NOT NULL,
+    postpone_limit integer NOT NULL DEFAULT 2,
+    postponed_used integer NOT NULL DEFAULT 0,
+    created_at timestamp without time zone DEFAULT now(),
+    CONSTRAINT customer_programs_pkey PRIMARY KEY (id),
+    CONSTRAINT customer_programs_customer_program_unique UNIQUE (customer_id, program_id),
+    CONSTRAINT customer_programs_customer_id_fkey FOREIGN KEY (customer_id)
+        REFERENCES public.customers (id) ON DELETE CASCADE,
+    CONSTRAINT customer_programs_program_id_fkey FOREIGN KEY (program_id)
+        REFERENCES public.programs (id) ON DELETE CASCADE
+);
+
+-- CUSTOMER SESSIONS
+CREATE TABLE IF NOT EXISTS public.customer_sessions (
+    id integer NOT NULL DEFAULT nextval('customer_sessions_id_seq'),
+    customer_id integer NOT NULL,
+    trainer_id integer NOT NULL,
+    session_date date NOT NULL DEFAULT CURRENT_DATE,
+    status character varying(20) NOT NULL,
+    created_at timestamp without time zone DEFAULT now(),
+    action_type character varying(20) DEFAULT 'normal',
+    start_time timestamp without time zone,
+    end_time timestamp without time zone,
+    CONSTRAINT customer_sessions_pkey PRIMARY KEY (id),
+    CONSTRAINT customer_sessions_unique UNIQUE (customer_id, session_date),
+    CONSTRAINT customer_sessions_customer_id_fkey FOREIGN KEY (customer_id)
+        REFERENCES public.customers (id) ON DELETE CASCADE,
+    CONSTRAINT customer_sessions_trainer_id_fkey FOREIGN KEY (trainer_id)
+        REFERENCES public.trainers (id) ON DELETE CASCADE
+);
+
+-- CUSTOMER PROGRESS
+CREATE TABLE IF NOT EXISTS public.customer_progress (
+    id integer NOT NULL DEFAULT nextval('customer_progress_id_seq'),
+    customer_id integer NOT NULL,
+    trainer_id integer,
+    log_date date NOT NULL DEFAULT CURRENT_DATE,
+    weight numeric,
+    neck numeric,
+    chest numeric,
+    upper_waist numeric,
+    lower_waist numeric,
+    hips numeric,
+    arms numeric,
+    thighs numeric,
+    pushups integer,
+    plank_seconds integer,
+    squats integer,
+    lunges integer,
+    deadlift numeric,
+    latpulldown numeric,
+    chest_press numeric,
+    shoulder_press numeric,
+    cycling_time integer,
+    cycling_distance numeric,
+    jumping_jacks integer,
+    burpees integer,
+    high_knees integer,
+    mountain_climbers integer,
+    skipping integer,
+    sit_and_reach numeric,
+    deep_squat_hold integer,
+    hip_flexor_hold integer,
+    shoulder_mobility character varying(20),
+    bridge_hold integer,
+    diet_compliance character varying(20),
+    meals_per_day integer,
+    protein_intake numeric,
+    water_intake numeric,
+    junk_food_per_week integer,
+    steps_per_day integer,
+    steps_source character varying(10) DEFAULT 'manual',
+    sleep_hours numeric,
+    trainer_note text,
+    created_at timestamp without time zone DEFAULT now(),
+    updated_at timestamp without time zone DEFAULT now(),
+    CONSTRAINT customer_progress_pkey PRIMARY KEY (id),
+    CONSTRAINT customer_progress_unique UNIQUE (customer_id, log_date)
+);
+
+-- CUSTOMER PROGRESS HISTORY
+CREATE TABLE IF NOT EXISTS public.customer_progress_history (
+    history_id integer NOT NULL DEFAULT nextval('customer_progress_history_history_id_seq'),
+    progress_id integer,
+    customer_id integer NOT NULL,
+    trainer_id integer,
+    log_date date,
+    weight numeric,
+    neck numeric,
+    chest numeric,
+    upper_waist numeric,
+    lower_waist numeric,
+    hips numeric,
+    arms numeric,
+    thighs numeric,
+    pushups integer,
+    plank_seconds integer,
+    squats integer,
+    lunges integer,
+    deadlift numeric,
+    latpulldown numeric,
+    chest_press numeric,
+    shoulder_press numeric,
+    cycling_time integer,
+    cycling_distance numeric,
+    jumping_jacks integer,
+    burpees integer,
+    high_knees integer,
+    mountain_climbers integer,
+    skipping integer,
+    sit_and_reach numeric,
+    deep_squat_hold integer,
+    hip_flexor_hold integer,
+    shoulder_mobility character varying(20),
+    bridge_hold integer,
+    diet_compliance character varying(20),
+    meals_per_day integer,
+    protein_intake numeric,
+    water_intake numeric,
+    junk_food_per_week integer,
+    steps_per_day integer,
+    steps_source character varying(10),
+    sleep_hours numeric,
+    trainer_note text,
+    modifiedon timestamp without time zone DEFAULT now(),
+    modifiedby character varying(100),
+    CONSTRAINT customer_progress_history_pkey PRIMARY KEY (history_id)
+);
+
+-- PAUSE REQUESTS
+CREATE TABLE IF NOT EXISTS public.pause_requests (
+    id integer NOT NULL DEFAULT nextval('pause_requests_id_seq'),
+    customer_id integer NOT NULL,
+    program_id integer,
+    pause_until_date date NOT NULL,
+    reason text NOT NULL,
+    status character varying(20) DEFAULT 'Pending',
+    reviewed_at timestamp without time zone,
+    created_at timestamp without time zone DEFAULT now(),
+    CONSTRAINT pause_requests_pkey PRIMARY KEY (id),
+    CONSTRAINT pause_requests_customer_id_fkey FOREIGN KEY (customer_id)
+        REFERENCES public.customers (id) ON DELETE CASCADE,
+    CONSTRAINT pause_requests_program_id_fkey FOREIGN KEY (program_id)
+        REFERENCES public.programs (id) ON DELETE CASCADE
+);
+
+-- LEGAL DOCUMENTS
+CREATE TABLE IF NOT EXISTS public.legal_documents (
+    id integer NOT NULL DEFAULT nextval('legal_documents_id_seq'),
+    type character varying(32) NOT NULL,
+    version integer NOT NULL,
+    content text NOT NULL,
+    created_at timestamp without time zone DEFAULT now(),
+    updated_at timestamp without time zone DEFAULT now(),
+    CONSTRAINT legal_documents_pkey PRIMARY KEY (id),
+    CONSTRAINT legal_documents_unique UNIQUE (type, version)
+);
+
+-- USER AGREEMENTS
+CREATE TABLE IF NOT EXISTS public.user_agreements (
+    id integer NOT NULL DEFAULT nextval('user_agreements_id_seq'),
+    user_id integer NOT NULL,
+    type character varying(32) NOT NULL,
+    version integer NOT NULL,
+    agreed boolean DEFAULT true,
+    agreed_at timestamp without time zone DEFAULT now(),
+    CONSTRAINT user_agreements_pkey PRIMARY KEY (id),
+    CONSTRAINT user_agreements_unique UNIQUE (user_id, type, version),
+    CONSTRAINT user_agreements_user_id_fkey FOREIGN KEY (user_id)
+        REFERENCES public.users (id) ON DELETE CASCADE
+);
+
+
+INSERT INTO public.legal_documents(
+	id, type, version, content, created_at, updated_at)
+	VALUES (1, 'terms', 1, 'Welcome to Fittians.
+
+By using this application you agree to the following terms:
+
+1. You are responsible for the accuracy of the personal and health
+   information you provide.
+2. Fittians is a facilitation platform; training advice comes from
+   your assigned trainer and is not medical advice.
+3. Your data is processed per our privacy policy.
+4. You may request account deletion at any time.
+
+These terms may be updated. Continued use after an update constitutes
+acceptance of the revised terms.', '2026-04-19 13:02:02', '2026-04-19 13:02:02');
+
+
+INSERT INTO public.users(
+	id, name, email, password_hash, password, role, created_at, mobile, is_registered, modifiedon)
+	VALUES (1, 'admin', 'admin@fitness.com', null, 'admin@12345', 'admin', now(), '7665577456', true, now());
