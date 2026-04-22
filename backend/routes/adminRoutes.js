@@ -3,9 +3,6 @@ const { body } = require('express-validator');
 const { authenticate, authorizeRoles } = require('../middleware/authMiddleware');
 const { adminUpload } = require('../config/upload');
 const {
-  approveTrainerController,
-  rejectTrainerController,
-  getPendingTrainersController,
   mapTrainerController,
   createUserController,
   getCustomersForMappingController,
@@ -115,32 +112,6 @@ router.get(
   authenticate,
   authorizeRoles('admin'),
   getTrainersListController
-);
-
-// GET /api/admin/pendingTrainers — list trainers awaiting approval
-router.get(
-  '/pendingTrainers',
-  authenticate,
-  authorizeRoles('admin'),
-  getPendingTrainersController
-);
-
-// POST /api/admin/approveTrainer
-router.post(
-  '/approveTrainer',
-  authenticate,
-  authorizeRoles('admin'),
-  [body('trainerId').isInt().withMessage('trainerId is required')],
-  approveTrainerController
-);
-
-// POST /api/admin/rejectTrainer
-router.post(
-  '/rejectTrainer',
-  authenticate,
-  authorizeRoles('admin'),
-  [body('trainerId').isInt().withMessage('trainerId is required')],
-  rejectTrainerController
 );
 
 // POST /api/admin/mapTrainer

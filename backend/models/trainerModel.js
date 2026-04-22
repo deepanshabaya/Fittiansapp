@@ -35,32 +35,6 @@ const getTrainerByUserId = async (userId) => {
   return result.rows[0];
 };
 
-const approveTrainer = async (trainerId) => {
-  const result = await query(
-    'UPDATE trainers SET is_approved = true WHERE id = $1 RETURNING *',
-    [trainerId]
-  );
-  return result.rows[0];
-};
-
-const rejectTrainer = async (trainerId) => {
-  const result = await query(
-    'UPDATE trainers SET is_approved = false WHERE id = $1 RETURNING *',
-    [trainerId]
-  );
-  return result.rows[0];
-};
-
-const getPendingTrainers = async () => {
-  const result = await query(
-    `SELECT t.*, u.email
-     FROM trainers t
-     JOIN users u ON u.id = t.user_id
-     ORDER BY t.id DESC`
-  );
-  return result.rows;
-};
-
 const getTrainerById = async (trainerId) => {
   const result = await query(
     'SELECT * FROM trainers WHERE id = $1',
@@ -80,9 +54,6 @@ const updateIntroductionVideoUrl = async ({ trainerId, videoUrl }) => {
 module.exports = {
   createTrainer,
   getTrainerByUserId,
-  approveTrainer,
-  rejectTrainer,
-  getPendingTrainers,
   getTrainerById,
   updateIntroductionVideoUrl,
 };

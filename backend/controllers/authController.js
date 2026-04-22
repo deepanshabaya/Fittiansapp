@@ -197,7 +197,8 @@ const register = async (req, res, next) => {
       customerId = profile?.id || null;
     }
 
-    const requiresApproval = updatedUser.role === 'trainer' && profile && !profile.is_approved;
+    // Trainer approval removed — all registered users are active immediately.
+    const requiresApproval = false;
 
     const tokenPayload = {
       id: updatedUser.id,

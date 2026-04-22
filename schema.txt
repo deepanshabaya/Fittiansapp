@@ -298,3 +298,7 @@ acceptance of the revised terms.', '2026-04-19 13:02:02', '2026-04-19 13:02:02')
 INSERT INTO public.users(
 	id, name, email, password_hash, password, role, created_at, mobile, is_registered, modifiedon)
 	VALUES (1, 'admin', 'admin@fitness.com', null, 'admin@12345', 'admin', now(), '7665577456', true, now());
+
+-- Advance sequences past any hardcoded ids so later inserts don't collide.
+SELECT setval('users_id_seq', (SELECT COALESCE(MAX(id), 1) FROM public.users));
+SELECT setval('legal_documents_id_seq', (SELECT COALESCE(MAX(id), 1) FROM public.legal_documents));
