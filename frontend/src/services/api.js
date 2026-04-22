@@ -1,7 +1,9 @@
 // Use Expo public env var when available (set in fitness-mobile-new/.env).
 // Fallback is localhost for local emulator/dev use.
 const BASE_URL = (process.env.EXPO_PUBLIC_API_BASE_URL || 'http://localhost:3000').replace(/\/$/, '');
-const REQUEST_TIMEOUT_MS = 10000;
+// Render free tier sleeps after ~15 min of inactivity and takes 30–60s to wake.
+// Give enough headroom so the first request after idle doesn't abort.
+const REQUEST_TIMEOUT_MS = 45000;
 
 // Resolve a server-side upload path (e.g. "/uploads/profiles/123.jpg") into
 // a full URL the <Image> component can load. Returns null for empty values and
@@ -152,7 +154,7 @@ export async function adminCreateUser({ token, role, formData, imageUri, imageFi
       // Do NOT set Content-Type — fetch sets it with the correct boundary for FormData
     },
     body,
-  }, 15000); // slightly longer timeout for file uploads
+  }, 60000); // longer timeout for file uploads (covers cold-start + upload time)
 
   return handleResponse(res);
 }
