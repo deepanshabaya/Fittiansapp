@@ -18,6 +18,8 @@ const customerRoutes = require('./routes/customerRoutes');
 const dashboardRoutes = require('./routes/dashboardRoutes');
 const legalRoutes = require('./routes/legalRoutes');
 const userAgreementRoutes = require('./routes/userAgreementRoutes');
+const notificationRoutes = require('./routes/notificationRoutes');
+const notificationService = require('./services/notificationService');
 
 const app = express();
 
@@ -66,6 +68,10 @@ app.use('/api/customers', customerRoutes);
 app.use('/api/dashboard', dashboardRoutes);
 app.use('/api/legal', legalRoutes);
 app.use('/api/user-agreements', userAgreementRoutes);
+app.use('/api/notifications', notificationRoutes);
+
+// Subscribe notification listener to the event bus once at boot.
+notificationService.register();
 
 app.use(errorHandler);
 

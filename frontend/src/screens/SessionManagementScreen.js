@@ -16,6 +16,7 @@ import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context'
 import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '../navigation/AppNavigator';
 import Card from '../components/Card';
+import DateField from '../components/DateField';
 import {
   postponeDailySession,
   cancelDailySession,
@@ -229,7 +230,6 @@ export default function SessionManagementScreen() {
                 <Text style={styles.upcomingBadgeText}>Next</Text>
               </View>
               <Text style={styles.upcomingDate}>{formatUpcomingDate(tomorrowISO())}</Text>
-              <Text style={styles.upcomingTime}>7:00 AM</Text>
               <View style={styles.upcomingMetaRow}>
                 <Ionicons name="person-outline" size={13} color="#b3b3b3" />
                 <Text style={styles.upcomingMeta}>With your trainer</Text>
@@ -281,13 +281,13 @@ export default function SessionManagementScreen() {
                 <Text style={styles.actionSub}>Before 8 PM of previous day</Text>
               </View>
             </View>
-            <TextInput
-              style={styles.input}
-              placeholder="YYYY-MM-DD"
-              placeholderTextColor="#6b6360"
+            <DateField
               value={postponeDate}
-              onChangeText={setPostponeDate}
+              onChange={setPostponeDate}
+              placeholder="Select date"
+              minimumDate={new Date()}
             />
+            <View style={{ height: 10 }} />
             <TouchableOpacity
               style={[styles.primaryBtn, (limitReached || submittingPostpone) && styles.btnDisabled]}
               onPress={handlePostpone}
@@ -315,13 +315,13 @@ export default function SessionManagementScreen() {
                 <Text style={styles.actionSub}>Before 8 PM of previous day</Text>
               </View>
             </View>
-            <TextInput
-              style={styles.input}
-              placeholder="YYYY-MM-DD"
-              placeholderTextColor="#6b6360"
+            <DateField
               value={cancelDate}
-              onChangeText={setCancelDate}
+              onChange={setCancelDate}
+              placeholder="Select date"
+              minimumDate={new Date()}
             />
+            <View style={{ height: 10 }} />
             <TouchableOpacity
               style={[styles.ghostBtn, submittingCancel && styles.btnDisabled]}
               onPress={handleCancel}
@@ -347,13 +347,13 @@ export default function SessionManagementScreen() {
                 <Text style={styles.actionSub}>Request approval from your trainer</Text>
               </View>
             </View>
-            <TextInput
-              style={styles.input}
-              placeholder="Pause until (YYYY-MM-DD)"
-              placeholderTextColor="#6b6360"
+            <DateField
               value={pauseUntilDate}
-              onChangeText={setPauseUntilDate}
+              onChange={setPauseUntilDate}
+              placeholder="Pause until"
+              minimumDate={new Date()}
             />
+            <View style={{ height: 10 }} />
             <TextInput
               style={[styles.input, styles.textArea]}
               placeholder="Reason"

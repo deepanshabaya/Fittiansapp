@@ -1,5 +1,6 @@
 const { validationResult } = require('express-validator');
 const { pool } = require('../config/db');
+const { bus, EVENTS, ACTION_TYPES } = require('../events/appEvents');
 
 // ─── POST /api/dashboard/session/mark ───────────────────
 // Trainer marks a customer's session as completed or missed for today
@@ -20,6 +21,15 @@ const markSessionController = async (req, res, next) => {
       [trainerId, customer_id]
     );
     if (map.rowCount === 0) return res.status(403).json({ message: 'Customer not assigned to you.' });
+
+    // Block trainer mark if customer already postponed/cancelled this date or
+    // an active pause covers it. Mirrors the customer-side single-action rule.
+    const existing = await findExistingSessionAction(customer_id, date);
+    if (existing) {
+      return res.status(409).json({
+        message: `Cannot mark — session is already ${existing} for this date.`,
+      });
+    }
 
     const result = await pool.query(
       `INSERT INTO customer_sessions (customer_id, trainer_id, session_date, status, action_type)
@@ -81,6 +91,30 @@ async function findTrainerIdForCustomer(customerId) {
   return r.rows[0]?.trainer_id || null;
 }
 
+// ─── Shared helper: enforce single-action-per-session rule ─
+// Returns the existing action_type if a postpone/cancel/pause already covers
+// this date; null if the customer is still free to act.
+async function findExistingSessionAction(customerId, sessionDate) {
+  const sess = await pool.query(
+    `SELECT action_type FROM customer_sessions
+     WHERE customer_id = $1 AND session_date = $2
+       AND action_type IN ('postponed','cancelled')`,
+    [customerId, sessionDate]
+  );
+  if (sess.rowCount > 0) return sess.rows[0].action_type;
+
+  const pause = await pool.query(
+    `SELECT 1 FROM pause_requests
+     WHERE customer_id = $1
+       AND status IN ('Pending','Approved')
+       AND pause_until_date >= $2::date`,
+    [customerId, sessionDate]
+  );
+  if (pause.rowCount > 0) return 'paused';
+
+  return null;
+}
+
 // ─── POST /api/dashboard/session/postpone (customer) ─────
 const postponeSessionController = async (req, res, next) => {
   try {
@@ -99,6 +133,13 @@ const postponeSessionController = async (req, res, next) => {
 
     if (!canModifySession(date)) {
       return res.status(400).json({ message: 'Session can only be modified before 8 PM of previous day' });
+    }
+
+    const existing = await findExistingSessionAction(customerId, date);
+    if (existing) {
+      return res.status(409).json({
+        message: `Action already taken for this session (${existing}). Only one action per session is allowed.`,
+      });
     }
 
     // Check postpone limit
@@ -129,6 +170,17 @@ const postponeSessionController = async (req, res, next) => {
       [customerId, trainerId, date]
     );
 
+    // Fire-and-forget event AFTER successful DB write. Notification listener
+    // is decoupled — failures there must not affect this response.
+    bus.emit(EVENTS.SESSION_ACTION, {
+      sessionId: result.rows[0]?.id,
+      customerId,
+      trainerId,
+      actionType: ACTION_TYPES.POSTPONE,
+      sessionDate: date,
+      timestamp: new Date().toISOString(),
+    });
+
     const counts = await getSessionCounts(customerId);
     return res.json({ session: result.rows[0], status: 'missed', customer_id: customerId, ...counts });
   } catch (err) {
@@ -156,6 +208,13 @@ const cancelSessionController = async (req, res, next) => {
       return res.status(400).json({ message: 'Session can only be modified before 8 PM of previous day' });
     }
 
+    const existing = await findExistingSessionAction(customerId, date);
+    if (existing) {
+      return res.status(409).json({
+        message: `Action already taken for this session (${existing}). Only one action per session is allowed.`,
+      });
+    }
+
     const trainerId = await findTrainerIdForCustomer(customerId);
     if (!trainerId) return res.status(400).json({ message: 'No trainer assigned to you.' });
 
@@ -167,6 +226,15 @@ const cancelSessionController = async (req, res, next) => {
        RETURNING *`,
       [customerId, trainerId, date]
     );
+
+    bus.emit(EVENTS.SESSION_ACTION, {
+      sessionId: result.rows[0]?.id,
+      customerId,
+      trainerId,
+      actionType: ACTION_TYPES.CANCEL,
+      sessionDate: date,
+      timestamp: new Date().toISOString(),
+    });
 
     const counts = await getSessionCounts(customerId);
     return res.json({ session: result.rows[0], status: 'missed', customer_id: customerId, ...counts });

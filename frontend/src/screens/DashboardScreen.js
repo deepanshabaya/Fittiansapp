@@ -15,6 +15,7 @@ import {
   ActivityIndicator,
 } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useNavigation } from '@react-navigation/native';
 import { useAuth } from '../navigation/AppNavigator';
 import * as ImagePicker from 'expo-image-picker';
 import {
@@ -136,6 +137,7 @@ const PROGRESS_GROUPS = [
 export default function DashboardScreen() {
   const { role, token, customerId, trainerId } = useAuth();
   const insets = useSafeAreaInsets();
+  const navigation = useNavigation();
 
   // ── Customer state ──
   const [customerTab, setCustomerTab] = useState('details'); // 'details' | 'trainer'
@@ -527,68 +529,68 @@ export default function DashboardScreen() {
 
                 {/* ── 3. Today's Stats ── */}
                 <Text style={styles.sectionHeading}>Today's Stats</Text>
-                <Card style={styles.todayCard}>
-                  <View style={styles.todayRow}>
-                    <View style={styles.todayCol}>
-                      <View style={styles.todayIconWrap}>
-                        <Ionicons name="walk" size={20} color="#ffc803" />
-                      </View>
-                      <Text style={styles.todayValue}>{dashData.steps_today ?? '—'}</Text>
-                      <Text style={styles.todayLabel}>Steps</Text>
-                    </View>
-                    <View style={styles.todayDivider} />
-                    <View style={styles.todayCol}>
-                      <View style={styles.todayIconWrap}>
-                        <Ionicons name="moon" size={20} color="#ffc803" />
-                      </View>
-                      <Text style={styles.todayValue}>
-                        {dashData.latest_progress?.sleep_hours ?? '—'}
-                      </Text>
-                      <Text style={styles.todayLabel}>Sleep (hrs)</Text>
-                    </View>
+                <Card style={styles.stepsCard}>
+                  <View style={styles.stepsIconWrap}>
+                    <Ionicons name="walk" size={22} color="#ffc803" />
                   </View>
-                  {stepsAvailable && (
-                    <TouchableOpacity
-                      style={styles.syncBtn}
-                      onPress={handleSyncSteps}
-                      disabled={stepsSyncing}
-                      activeOpacity={0.8}
-                    >
-                      {stepsSyncing ? (
-                        <ActivityIndicator color="#1a1716" />
-                      ) : (
-                        <>
-                          <Ionicons name="sync" size={14} color="#1a1716" />
-                          <Text style={styles.syncBtnText}>Sync from Device</Text>
-                        </>
-                      )}
-                    </TouchableOpacity>
-                  )}
+                  <View style={{ flex: 1 }}>
+                    <Text style={styles.stepsLabel}>Steps Today</Text>
+                    <Text style={styles.stepsValue}>{dashData.steps_today ?? '—'}</Text>
+                  </View>
                 </Card>
 
-                {/* ── 4. Performance ── */}
-                <Text style={styles.sectionHeading}>Performance</Text>
+                {/* ── 4. Your Progress ── */}
+                <View style={styles.perfHeader}>
+                  <Text style={styles.sectionHeading}>Your Progress</Text>
+                </View>
                 <View style={styles.perfRow}>
-                  <StatBox
-                    value={dashData.sessions?.completed ?? 0}
-                    label="Completed"
-                    color="#22c55e"
-                    icon="checkmark-circle"
-                  />
-                  <View style={{ width: 10 }} />
-                  <StatBox
-                    value={dashData.sessions?.missed ?? 0}
-                    label="Missed"
-                    color="#ef4444"
-                    icon="close-circle"
-                  />
-                  <View style={{ width: 10 }} />
-                  <StatBox
-                    value={dashData.streak ?? 0}
-                    label="Streak"
-                    color="#ffc803"
-                    icon="flame"
-                  />
+                  {(() => {
+                    const completed = dashData.sessions?.completed ?? 0;
+                    const total = dashData.customer_details?.total_sessions ?? 0;
+                    const missed = dashData.sessions?.missed ?? 0;
+                    const streak = dashData.streak ?? 0;
+                    const bestStreak = dashData.best_streak ?? streak;
+                    const pct = total > 0 ? Math.round((completed / total) * 100) : 0;
+
+                    return (
+                      <>
+                        <View style={[styles.ringCard, { borderColor: '#22c55e' }]}>
+                          <View style={[styles.ringCircle, { borderColor: '#22c55e' }]}>
+                            <Text style={[styles.ringValue, { color: '#22c55e' }]}>
+                              {completed}{total > 0 ? `/${total}` : ''}
+                            </Text>
+                          </View>
+                          <Text style={styles.ringLabel}>Completed</Text>
+                          <Text style={styles.ringSubLabel}>This Week</Text>
+                          <Text style={[styles.ringHint, { color: '#22c55e' }]}>
+                            {total > 0 ? `${pct}% of weekly goal` : 'Get started!'}
+                          </Text>
+                        </View>
+                        <View style={{ width: 10 }} />
+                        <View style={[styles.ringCard, { borderColor: '#ef4444' }]}>
+                          <View style={[styles.ringCircle, { borderColor: '#ef4444' }]}>
+                            <Text style={[styles.ringValue, { color: '#ef4444' }]}>{missed}</Text>
+                          </View>
+                          <Text style={styles.ringLabel}>Missed</Text>
+                          <Text style={styles.ringSubLabel}>This Week</Text>
+                          <Text style={[styles.ringHint, { color: '#ef4444' }]}>
+                            {missed === 0 ? 'Great job!' : 'Keep going!'}
+                          </Text>
+                        </View>
+                        <View style={{ width: 10 }} />
+                        <View style={[styles.ringCard, { borderColor: '#ffc803' }]}>
+                          <View style={[styles.ringCircle, { borderColor: '#ffc803' }]}>
+                            <Text style={[styles.ringValue, { color: '#ffc803' }]}>{streak}</Text>
+                          </View>
+                          <Text style={styles.ringLabel}>Day Streak</Text>
+                          <Text style={styles.ringSubLabel}>Current</Text>
+                          <Text style={[styles.ringHint, { color: '#ffc803' }]}>
+                            Best: {bestStreak} days
+                          </Text>
+                        </View>
+                      </>
+                    );
+                  })()}
                 </View>
 
                 {/* ── 5. Weekly Progress ── */}
@@ -645,6 +647,13 @@ export default function DashboardScreen() {
                 <Text style={styles.trHello}>Hello, Coach 👋</Text>
                 <Text style={styles.trHelloSub}>Here's what's on today.</Text>
               </View>
+              <TouchableOpacity
+                onPress={() => navigation.navigate('Notifications')}
+                style={styles.bellBtn}
+                activeOpacity={0.7}
+              >
+                <Ionicons name="notifications-outline" size={22} color="#ffc803" />
+              </TouchableOpacity>
             </View>
 
             {error ? <Text style={styles.error}>{error}</Text> : null}
@@ -1121,48 +1130,93 @@ const styles = StyleSheet.create({
     letterSpacing: 0.2,
   },
 
-  todayCard: { marginBottom: 18 },
-  todayRow: {
+  // Steps card (today's stats)
+  stepsCard: {
     flexDirection: 'row',
     alignItems: 'center',
+    marginBottom: 18,
+    gap: 14,
   },
-  todayCol: {
-    flex: 1,
-    alignItems: 'center',
-    paddingVertical: 6,
-  },
-  todayDivider: {
-    width: 1,
-    alignSelf: 'stretch',
-    backgroundColor: '#2e2a28',
-    marginHorizontal: 8,
-  },
-  todayIconWrap: {
-    width: 38,
-    height: 38,
-    borderRadius: 12,
+  stepsIconWrap: {
+    width: 44,
+    height: 44,
+    borderRadius: 14,
     backgroundColor: 'rgba(255,200,3,0.12)',
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: 10,
   },
-  todayValue: {
-    color: '#ffffff',
-    fontSize: 26,
-    fontWeight: '800',
-    letterSpacing: 0.3,
-  },
-  todayLabel: {
+  stepsLabel: {
     color: '#b3b3b3',
     fontSize: 11,
-    marginTop: 4,
     textTransform: 'uppercase',
     letterSpacing: 0.6,
+    fontWeight: '600',
+  },
+  stepsValue: {
+    color: '#ffffff',
+    fontSize: 24,
+    fontWeight: '800',
+    letterSpacing: 0.3,
+    marginTop: 2,
   },
 
+  // Performance ring cards
+  perfHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
   perfRow: {
     flexDirection: 'row',
     marginBottom: 18,
+  },
+  ringCard: {
+    flex: 1,
+    backgroundColor: '#252120',
+    borderRadius: 18,
+    paddingVertical: 18,
+    paddingHorizontal: 8,
+    alignItems: 'center',
+    borderWidth: 0,
+  },
+  ringCircle: {
+    width: 76,
+    height: 76,
+    borderRadius: 38,
+    borderWidth: 3,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 12,
+    backgroundColor: '#1a1716',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 6,
+    elevation: 3,
+  },
+  ringValue: {
+    fontSize: 18,
+    fontWeight: '800',
+    letterSpacing: 0.2,
+  },
+  ringLabel: {
+    color: '#ffffff',
+    fontSize: 12,
+    fontWeight: '700',
+    marginTop: 2,
+  },
+  ringSubLabel: {
+    color: '#6b6360',
+    fontSize: 10,
+    marginTop: 2,
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+  },
+  ringHint: {
+    fontSize: 10,
+    fontWeight: '600',
+    marginTop: 6,
+    textAlign: 'center',
   },
 
   chartHeader: {
@@ -1234,6 +1288,16 @@ const styles = StyleSheet.create({
   trStatsRow: {
     flexDirection: 'row',
     marginBottom: 18,
+  },
+  bellBtn: {
+    width: 40,
+    height: 40,
+    borderRadius: 12,
+    backgroundColor: '#252120',
+    borderWidth: 1,
+    borderColor: '#332e2b',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   emptyText: {
     color: '#b3b3b3',

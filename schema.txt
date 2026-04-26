@@ -14,6 +14,7 @@ CREATE SEQUENCE IF NOT EXISTS customer_progress_history_history_id_seq;
 CREATE SEQUENCE IF NOT EXISTS pause_requests_id_seq;
 CREATE SEQUENCE IF NOT EXISTS legal_documents_id_seq;
 CREATE SEQUENCE IF NOT EXISTS user_agreements_id_seq;
+CREATE SEQUENCE IF NOT EXISTS notifications_id_seq;
 
 -- =========================
 -- TABLES
@@ -278,6 +279,33 @@ CREATE TABLE IF NOT EXISTS public.user_agreements (
 );
 
 
+-- NOTIFICATIONS (in-app notifications for trainers / customers)
+CREATE TABLE IF NOT EXISTS public.notifications (
+    id integer NOT NULL DEFAULT nextval('notifications_id_seq'),
+    recipient_user_id integer NOT NULL,
+    recipient_role character varying(20) NOT NULL,
+    actor_user_id integer,
+    type character varying(40) NOT NULL,
+    message text NOT NULL,
+    reference_table character varying(40),
+    reference_id integer,
+    metadata jsonb,
+    is_read boolean NOT NULL DEFAULT false,
+    read_at timestamp without time zone,
+    created_at timestamp without time zone DEFAULT now(),
+    CONSTRAINT notifications_pkey PRIMARY KEY (id),
+    CONSTRAINT notifications_recipient_fkey FOREIGN KEY (recipient_user_id)
+        REFERENCES public.users (id) ON DELETE CASCADE,
+    CONSTRAINT notifications_actor_fkey FOREIGN KEY (actor_user_id)
+        REFERENCES public.users (id) ON DELETE SET NULL,
+    CONSTRAINT notifications_role_check CHECK (recipient_role IN ('admin','trainer','customer')),
+    CONSTRAINT notifications_dedupe_unique UNIQUE (recipient_user_id, type, reference_table, reference_id)
+);
+
+CREATE INDEX IF NOT EXISTS notifications_recipient_unread_idx
+    ON public.notifications (recipient_user_id, is_read, created_at DESC);
+
+
 INSERT INTO public.legal_documents(
 	id, type, version, content, created_at, updated_at)
 	VALUES (1, 'terms', 1, 'Welcome to Fittians.
@@ -302,3 +330,32 @@ INSERT INTO public.users(
 -- Advance sequences past any hardcoded ids so later inserts don't collide.
 SELECT setval('users_id_seq', (SELECT COALESCE(MAX(id), 1) FROM public.users));
 SELECT setval('legal_documents_id_seq', (SELECT COALESCE(MAX(id), 1) FROM public.legal_documents));
+
+
+
+CREATE SEQUENCE IF NOT EXISTS notifications_id_seq;
+
+CREATE TABLE IF NOT EXISTS public.notifications (
+    id integer NOT NULL DEFAULT nextval('notifications_id_seq'),
+    recipient_user_id integer NOT NULL,
+    recipient_role character varying(20) NOT NULL,
+    actor_user_id integer,
+    type character varying(40) NOT NULL,
+    message text NOT NULL,
+    reference_table character varying(40),
+    reference_id integer,
+    metadata jsonb,
+    is_read boolean NOT NULL DEFAULT false,
+    read_at timestamp without time zone,
+    created_at timestamp without time zone DEFAULT now(),
+    CONSTRAINT notifications_pkey PRIMARY KEY (id),
+    CONSTRAINT notifications_recipient_fkey FOREIGN KEY (recipient_user_id)
+        REFERENCES public.users (id) ON DELETE CASCADE,
+    CONSTRAINT notifications_actor_fkey FOREIGN KEY (actor_user_id)
+        REFERENCES public.users (id) ON DELETE SET NULL,
+    CONSTRAINT notifications_role_check CHECK (recipient_role IN ('admin','trainer','customer')),
+    CONSTRAINT notifications_dedupe_unique UNIQUE (recipient_user_id, type, reference_table, reference_id)
+);
+
+CREATE INDEX IF NOT EXISTS notifications_recipient_unread_idx
+    ON public.notifications (recipient_user_id, is_read, created_at DESC);

@@ -20,6 +20,7 @@ import { Ionicons } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
 import { useAuth } from '../navigation/AppNavigator';
 import { adminCreateUser } from '../services/api';
+import DateField from '../components/DateField';
 
 // ────────────────────────────────────────────────────────
 // Field definitions — keeps the form rendering DRY.
@@ -33,8 +34,8 @@ const CUSTOMER_FIELDS = [
   { key: 'weight', label: 'Weight (kg)', placeholder: '70', keyboard: 'decimal-pad' },
   { key: 'height', label: 'Height (cm)', placeholder: '175', keyboard: 'decimal-pad' },
   { key: 'amount_paid', label: 'Amount Paid', placeholder: '0.00', keyboard: 'decimal-pad' },
-  { key: 'amount_paid_on', label: 'Amount Paid On', placeholder: 'YYYY-MM-DD' },
-  { key: 'start_date', label: 'Start Date', placeholder: 'YYYY-MM-DD' },
+  { key: 'amount_paid_on', label: 'Amount Paid On', type: 'date', placeholder: 'Select date' },
+  { key: 'start_date', label: 'Start Date', type: 'date', placeholder: 'Select date' },
   { key: 'age', label: 'Age', placeholder: '25', keyboard: 'numeric' },
   {
     key: 'daily_routine', label: 'Daily Routine', type: 'picker',
@@ -347,6 +348,12 @@ export default function CreateUserScreen({ navigation }) {
                   </Text>
                   <Ionicons name="chevron-down" size={18} color="#6b6360" />
                 </TouchableOpacity>
+              ) : field.type === 'date' ? (
+                <DateField
+                  value={formValues[field.key] || ''}
+                  onChange={(v) => handleChange(field.key, v)}
+                  placeholder={field.placeholder}
+                />
               ) : (
                 <TextInput
                   style={[styles.input, field.lines > 1 && { height: field.lines * 36, textAlignVertical: 'top' }]}

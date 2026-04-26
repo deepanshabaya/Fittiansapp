@@ -504,3 +504,41 @@ export async function recordUserAgreement({ token, type = 'terms', version }) {
   });
   return handleResponse(res);
 }
+
+// ────────────────────────────────────────────────────────
+// Notifications
+// ────────────────────────────────────────────────────────
+
+export async function fetchNotifications({ token, unread = false, limit = 50 }) {
+  const qs = new URLSearchParams();
+  if (unread) qs.append('unread', 'true');
+  if (limit) qs.append('limit', String(limit));
+  const url = `${BASE_URL}/api/notifications${qs.toString() ? `?${qs}` : ''}`;
+  const res = await fetchWithTimeout(url, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  return handleResponse(res);
+}
+
+export async function fetchUnreadNotificationCount({ token }) {
+  const res = await fetchWithTimeout(`${BASE_URL}/api/notifications/unread-count`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  return handleResponse(res);
+}
+
+export async function markNotificationRead({ token, id }) {
+  const res = await fetchWithTimeout(`${BASE_URL}/api/notifications/${id}/read`, {
+    method: 'POST',
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  return handleResponse(res);
+}
+
+export async function markAllNotificationsRead({ token }) {
+  const res = await fetchWithTimeout(`${BASE_URL}/api/notifications/read-all`, {
+    method: 'POST',
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  return handleResponse(res);
+}

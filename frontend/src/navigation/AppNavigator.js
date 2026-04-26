@@ -16,6 +16,7 @@ import AdminScreen from '../screens/AdminScreen';
 import CreateUserScreen from '../screens/CreateUserScreen';
 import TrainerCustomerMappingScreen from '../screens/TrainerCustomerMappingScreen';
 import EditUserScreen from '../screens/EditUserScreen';
+import NotificationsScreen from '../screens/NotificationsScreen';
 
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -51,6 +52,17 @@ function AppTabs() {
       {!isTrainer && <Tab.Screen name="Plan" component={PlanScreen} />}
       <Tab.Screen name="Profile" component={ProfileScreen} />
     </Tab.Navigator>
+  );
+}
+
+// Wrap tabs in a stack so screens (e.g. Notifications) can be pushed from
+// header icons without adding another bottom tab.
+function MainNavigator() {
+  return (
+    <Stack.Navigator screenOptions={{ headerShown: false }}>
+      <Stack.Screen name="Tabs" component={AppTabs} />
+      <Stack.Screen name="Notifications" component={NotificationsScreen} />
+    </Stack.Navigator>
   );
 }
 
@@ -225,7 +237,7 @@ export default function AppNavigator() {
   } else if (user.role === 'trainer' && !isApproved) {
     content = <AuthNavigator />;
   } else {
-    content = <AppTabs />;
+    content = <MainNavigator />;
   }
 
   return (
